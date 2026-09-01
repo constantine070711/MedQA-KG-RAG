@@ -1,0 +1,45 @@
+# ============================================================
+# MedQA — Python 3.11 依赖
+# 依据项目实际 import 整理（不是随意升级/新增）：
+#   src/rag_engine.py   → lightrag-hku
+#   src/llm_client.py   → openai（DeepSeek OpenAI 兼容接口）
+#   src/config.py       → python-dotenv
+#   src/embedder.py     → sentence-transformers（bge 系列本地 embedding）
+#   src/neo4j_utils.py  → neo4j（图数据库驱动）
+#   src/agent.py        → langgraph（Agent 工作流）
+#   app/streamlit_app.py→ streamlit + pyvis（Web UI 与 KG 可视化）
+#   app/ui_helpers.py   → networkx（KG 确定性布局）
+# ============================================================
+
+# --- 核心 RAG 引擎（Graph + Vector）---
+lightrag-hku==1.5.4
+
+# --- LLM API（DeepSeek OpenAI 兼容接口）---
+openai>=2.0
+
+# --- 环境变量管理 ---
+python-dotenv>=1.0
+
+# --- 本地 Embedding 模型（bge-m3 / bge-small-zh-v1.5）---
+# 会拉取 torch；如网络受限可先单独安装合适版本的 torch
+sentence-transformers>=5.0
+
+# --- 图数据库 ---
+neo4j>=6.0
+
+# --- Agent 工作流 ---
+langgraph>=1.0
+
+# --- Web UI 与知识图谱可视化 ---
+streamlit>=1.60
+pyvis>=0.3
+networkx>=3.0
+
+# ============================================================
+# 说明
+# ============================================================
+# 1. torch 由 sentence-transformers 自动安装；如需 CPU 版可自行调整安装命令。
+# 2. 未列入本文件的包（如 pandas / numpy）为传递依赖，项目代码未直接 import。
+# 3. 生产运行需要 .env 配置 DeepSeek API Key 与 Neo4j 连接信息（见 .env.example）。
+# 4. Neo4j 容器可用 docker-compose.yml 一键启动；图谱缺失时系统自动降级为
+#    LightRAG 向量/图混合检索，不影响 Web UI 正常运行。

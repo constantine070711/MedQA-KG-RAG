@@ -1,0 +1,19 @@
+# Phase 6 F1 — Neo4j Community Docker 编排
+# 认证通过 .env 注入（NEO4J_USER / NEO4J_PASSWORD），本文件不包含真实密码。
+services:
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: medqa-neo4j
+    restart: unless-stopped
+    ports:
+      # 注意：Windows 保留端口段（winnat 动态分配）若覆盖 7474/7687 会导致绑定失败。
+      # 排查命令：netsh interface ipv4 show excludedportrange protocol=tcp
+      - "7474:7474"   # Neo4j Browser
+      - "7687:7687"   # Bolt
+    environment:
+      # 从项目 .env 读取（docker compose 自动加载 .env 插值）
+      - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
+    volumes:
+      - medqa-neo4j-data:/data
+volumes:
+  medqa-neo4j-data:

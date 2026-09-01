@@ -1,0 +1,94 @@
+# ============================================================
+# MedQA — GitHub 公开版 .gitignore
+# 原则：保留「运行 Demo / 复现实验」必需的小型数据与配置模板；
+#      忽略本地运行产物、模型权重、索引缓存与内部开发文档。
+# ============================================================
+
+# ---------- 敏感配置 ----------
+.env
+*.env
+!.env.example
+
+# ---------- Python ----------
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+
+# ---------- 本地模型权重（HuggingFace 可自动下载，不入库）----------
+models/
+
+# ---------- LightRAG 索引缓存（由 scripts/index_docs.py 重建）----------
+lightrag_cache/
+lightrag_cache_medkb/
+lightrag_cache_cblue/
+
+# ---------- 数据 ----------
+# 原始数据：保留小型示例知识库（diseases/drugs，运行 Demo 必需），
+#           忽略大型原始语料与真实医学数据集
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/diseases/
+!data/raw/drugs/
+!data/raw/diseases/**
+!data/raw/drugs/**
+!data/raw/guidelines/
+!data/raw/symptoms/
+!data/raw/guidelines/**
+!data/raw/symptoms/**
+data/raw/medical_kb/
+data/raw/medical_knowledge*.txt
+
+# 处理后的数据（可由 scripts/run_pipeline.py 重建）
+data/processed/*
+!data/processed/.gitkeep
+
+# 外部真实数据集（CMeIE / CBLUE）：仅保留数据来源与许可说明 SOURCE.md
+data/external/*
+!data/external/medical_kb/
+data/external/medical_kb/*
+!data/external/medical_kb/SOURCE.md
+
+# 自动生成的元数据索引
+data/metadata/
+
+# 评测中间产物（smoke test / benchmark JSON，结果已提炼到 README）
+data/eval/*
+!data/eval/.gitkeep
+evaluation/reports/*
+!evaluation/reports/.gitkeep
+
+# 观测日志（JSONL 运行时日志）
+data/logs/
+
+# 向量数据库
+chroma_db/
+
+# 数据库文件
+*.db
+*.sqlite
+
+# ---------- 内部开发文档（不进入公开仓库）----------
+# 开发进度/交接/决策记录与各 Phase 设计报告，仅保留本地
+CLAUDE.md
+PROJECT_HANDOFF.md
+PROJECT_LOG.md
+PROJECT_STATUS.md
+DECISIONS.md
+docs/phase*
+项目流程与要求.txt
+
+# ---------- 日志 ----------
+logs/
+*.log
+
+# ---------- IDE / OS ----------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

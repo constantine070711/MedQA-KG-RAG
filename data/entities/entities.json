@@ -1,0 +1,1150 @@
+{
+  "generated_at": "2026-07-26",
+  "pipeline_version": "Phase 4",
+  "total_entities": 14,
+  "total_relations": 42,
+  "by_entity_type": {
+    "disease": 9,
+    "drug": 5
+  },
+  "entities": [
+    {
+      "entity_id": "markdown:disease:支气管哮喘",
+      "name": "支气管哮喘",
+      "entity_type": "disease",
+      "aliases": [
+        {
+          "name": "Bronchial Asthma",
+          "language": "en"
+        },
+        {
+          "name": "Asthma",
+          "language": "en"
+        },
+        {
+          "name": "哮喘",
+          "language": "zh"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ICD-10",
+          "code": "J45"
+        }
+      ],
+      "category": "呼吸系统疾病",
+      "description": "支气管哮喘是一种以慢性气道炎症、气道高反应性和可逆性气流受限为特征的异质性疾病。 - 反复发作性喘息 - 气促 - 胸闷 - 咳嗽（夜间和清晨加重） - 发作时可闻及哮鸣音 典型症状 + 可变性气流受限证据： - 支气管舒张试验阳性：FEV₁ 增加 ≥ 12% 且 ≥ 200ml - PEF 变异率 > 10% - 激发试验阳性 采用**阶梯治疗原则**： - **长期控制药物**： - 吸入性糖...",
+      "properties": {
+        "filename": "bronchial-asthma.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 528,
+        "drug_type": ""
+      },
+      "relations": [
+        {
+          "subject": "支气管哮喘",
+          "relation": "HAS_SYMPTOM",
+          "object": "见正文症状章节"
+        },
+        {
+          "subject": "支气管哮喘",
+          "relation": "HAS_COMPLICATION",
+          "object": "见正文并发症章节"
+        },
+        {
+          "subject": "支气管哮喘",
+          "relation": "TREATED_BY",
+          "object": "见正文治疗方法章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Disease Knowledge (呼吸系统疾病)",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:disease:慢性胃炎",
+      "name": "慢性胃炎",
+      "entity_type": "disease",
+      "aliases": [
+        {
+          "name": "Chronic Gastritis",
+          "language": "en"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ICD-10",
+          "code": "K29"
+        }
+      ],
+      "category": "消化系统疾病",
+      "description": "慢性胃炎是由多种原因引起的胃黏膜慢性炎症性病变，是消化系统最常见的疾病之一。 - 上腹部隐痛或不适 - 餐后饱胀感 - 嗳气、反酸 - 恶心 - 食欲减退 - 部分患者无明显症状 - **胃镜检查 + 黏膜活检**：确诊的金标准 - 幽门螺杆菌 (Hp) 检测：¹³C 或 ¹⁴C 呼气试验、快速尿素酶试验 - **根除幽门螺杆菌**：四联疗法（PPI + 铋剂 + 两种抗生素如阿莫西林 + 克拉霉...",
+      "properties": {
+        "filename": "chronic-gastritis.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 472,
+        "drug_type": ""
+      },
+      "relations": [
+        {
+          "subject": "慢性胃炎",
+          "relation": "HAS_SYMPTOM",
+          "object": "见正文症状章节"
+        },
+        {
+          "subject": "慢性胃炎",
+          "relation": "HAS_COMPLICATION",
+          "object": "见正文并发症章节"
+        },
+        {
+          "subject": "慢性胃炎",
+          "relation": "TREATED_BY",
+          "object": "见正文治疗方法章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Disease Knowledge (消化系统疾病)",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:disease:感冒",
+      "name": "感冒",
+      "entity_type": "disease",
+      "aliases": [
+        {
+          "name": "Common Cold",
+          "language": "en"
+        },
+        {
+          "name": "上呼吸道感染",
+          "language": "zh"
+        },
+        {
+          "name": "Upper Respiratory Tract Infection",
+          "language": "en"
+        },
+        {
+          "name": "URI",
+          "language": "en"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ICD-10",
+          "code": "J00-J06"
+        }
+      ],
+      "category": "呼吸系统疾病",
+      "description": "感冒是由病毒引起的上呼吸道感染性疾病，是最常见的急性呼吸道疾病。 - 鼻塞 - 流涕 - 打喷嚏 - 咽痛 - 咳嗽 - 发热（通常低于 39℃） - 头痛 - 全身酸痛 根据临床症状和体征诊断，一般不需特殊检查。通常症状持续 7-10 天。 对症治疗为主： - 解热镇痛药：对乙酰氨基酚、布洛芬 - 抗组胺药：缓解鼻塞流涕 - 止咳祛痰药 - 充分休息、多饮水 > **注意**：抗生素对病毒感染无...",
+      "properties": {
+        "filename": "common-cold.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 355,
+        "drug_type": ""
+      },
+      "relations": [
+        {
+          "subject": "感冒",
+          "relation": "HAS_SYMPTOM",
+          "object": "见正文症状章节"
+        },
+        {
+          "subject": "感冒",
+          "relation": "HAS_COMPLICATION",
+          "object": "见正文并发症章节"
+        },
+        {
+          "subject": "感冒",
+          "relation": "TREATED_BY",
+          "object": "见正文治疗方法章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Disease Knowledge (呼吸系统疾病)",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:disease:慢性阻塞性肺疾病",
+      "name": "慢性阻塞性肺疾病",
+      "entity_type": "disease",
+      "aliases": [
+        {
+          "name": "COPD",
+          "language": "en"
+        },
+        {
+          "name": "Chronic Obstructive Pulmonary Disease",
+          "language": "en"
+        },
+        {
+          "name": "慢阻肺",
+          "language": "zh"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ICD-10",
+          "code": "J44"
+        }
+      ],
+      "category": "呼吸系统疾病",
+      "description": "COPD 是一种以持续性气流受限为特征的慢性呼吸系统疾病，主要由吸烟和空气污染引起，包括慢性支气管炎和肺气肿。 - 慢性咳嗽 - 咳痰（白色黏液或浆液性痰） - 进行性呼吸困难（活动后加重） - 喘息、胸闷 - 晚期可出现体重下降、食欲减退 危险因素暴露史（吸烟、粉尘等）+ 症状 + 肺功能检查（吸入支气管舒张剂后 FEV₁/FVC < 0.7）。 - **戒烟**（最重要） - 支气管舒张剂（β...",
+      "properties": {
+        "filename": "copd.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 432,
+        "drug_type": ""
+      },
+      "relations": [
+        {
+          "subject": "慢性阻塞性肺疾病",
+          "relation": "HAS_SYMPTOM",
+          "object": "见正文症状章节"
+        },
+        {
+          "subject": "慢性阻塞性肺疾病",
+          "relation": "HAS_COMPLICATION",
+          "object": "见正文并发症章节"
+        },
+        {
+          "subject": "慢性阻塞性肺疾病",
+          "relation": "TREATED_BY",
+          "object": "见正文治疗方法章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Disease Knowledge (呼吸系统疾病)",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:disease:冠心病",
+      "name": "冠心病",
+      "entity_type": "disease",
+      "aliases": [
+        {
+          "name": "Coronary Heart Disease",
+          "language": "en"
+        },
+        {
+          "name": "CHD",
+          "language": "en"
+        },
+        {
+          "name": "Coronary Artery Disease",
+          "language": "en"
+        },
+        {
+          "name": "CAD",
+          "language": "en"
+        },
+        {
+          "name": "冠状动脉粥样硬化性心脏病",
+          "language": "zh"
+        },
+        {
+          "name": "缺血性心脏病",
+          "language": "zh"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ICD-10",
+          "code": "I20-I25"
+        }
+      ],
+      "category": "心血管疾病",
+      "description": "冠状动脉粥样硬化性心脏病（冠心病）是由于冠状动脉粥样硬化导致管腔狭窄或闭塞，引起心肌缺血缺氧甚至坏死的心脏病。 - **心绞痛**：胸痛（压榨性、闷痛），可放射至左肩/左臂/下颌 - 胸闷、心悸、气促 - **急性心肌梗死**：剧烈持续胸痛、大汗、濒死感 - 心电图 - 动态心电图 - 心脏超声 - 冠状动脉 CTA - **冠状动脉造影**（金标准） - 心肌酶谱（肌钙蛋白为急性心梗首选标志物）...",
+      "properties": {
+        "filename": "coronary-heart-disease.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 466,
+        "drug_type": ""
+      },
+      "relations": [
+        {
+          "subject": "冠心病",
+          "relation": "HAS_SYMPTOM",
+          "object": "见正文症状章节"
+        },
+        {
+          "subject": "冠心病",
+          "relation": "HAS_COMPLICATION",
+          "object": "见正文并发症章节"
+        },
+        {
+          "subject": "冠心病",
+          "relation": "TREATED_BY",
+          "object": "见正文治疗方法章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Disease Knowledge (心血管疾病)",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:disease:2型糖尿病",
+      "name": "2型糖尿病",
+      "entity_type": "disease",
+      "aliases": [
+        {
+          "name": "Type 2 Diabetes Mellitus",
+          "language": "en"
+        },
+        {
+          "name": "T2DM",
+          "language": "en"
+        },
+        {
+          "name": "成人发病型糖尿病",
+          "language": "zh"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ICD-10",
+          "code": "E11"
+        }
+      ],
+      "category": "内分泌与代谢疾病",
+      "description": "2型糖尿病是一种以高血糖为特征的慢性代谢性疾病，主要由胰岛素抵抗和胰岛素分泌相对不足引起。 - 多饮、多尿、多食、体重下降（\"三多一少\"） - 疲劳乏力 - 视力模糊 - 伤口愈合缓慢 - 手脚麻木或刺痛 - 空腹血糖 ≥ 7.0 mmol/L - OGTT 2小时血糖 ≥ 11.1 mmol/L - HbA1c ≥ 6.5% - 生活方式干预：饮食控制、运动 - 口服降糖药：二甲双胍、磺脲类、D...",
+      "properties": {
+        "filename": "diabetes-type2.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 391,
+        "drug_type": ""
+      },
+      "relations": [
+        {
+          "subject": "2型糖尿病",
+          "relation": "HAS_SYMPTOM",
+          "object": "见正文症状章节"
+        },
+        {
+          "subject": "2型糖尿病",
+          "relation": "HAS_COMPLICATION",
+          "object": "见正文并发症章节"
+        },
+        {
+          "subject": "2型糖尿病",
+          "relation": "TREATED_BY",
+          "object": "见正文治疗方法章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Disease Knowledge (内分泌与代谢疾病)",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:disease:高脂血症",
+      "name": "高脂血症",
+      "entity_type": "disease",
+      "aliases": [
+        {
+          "name": "Hyperlipidemia",
+          "language": "en"
+        },
+        {
+          "name": "血脂异常",
+          "language": "zh"
+        },
+        {
+          "name": "Dyslipidemia",
+          "language": "en"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ICD-10",
+          "code": "E78"
+        }
+      ],
+      "category": "内分泌与代谢疾病",
+      "description": "高脂血症是血液中脂质（胆固醇和/或甘油三酯）水平异常升高的代谢性疾病，是动脉粥样硬化的主要危险因素。 大多无明显症状。严重者可出现： - 黄色瘤（皮肤或肌腱黄色结节） - 角膜弓（角膜边缘灰白色环） - 动脉粥样硬化相关表现 满足任意一项： - 总胆固醇 ≥ 5.2 mmol/L - LDL-C ≥ 3.4 mmol/L - 甘油三酯 ≥ 1.7 mmol/L - HDL-C < 1.0 mmol...",
+      "properties": {
+        "filename": "hyperlipidemia.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 440,
+        "drug_type": ""
+      },
+      "relations": [
+        {
+          "subject": "高脂血症",
+          "relation": "HAS_SYMPTOM",
+          "object": "见正文症状章节"
+        },
+        {
+          "subject": "高脂血症",
+          "relation": "HAS_COMPLICATION",
+          "object": "见正文并发症章节"
+        },
+        {
+          "subject": "高脂血症",
+          "relation": "TREATED_BY",
+          "object": "见正文治疗方法章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Disease Knowledge (内分泌与代谢疾病)",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:disease:高血压",
+      "name": "高血压",
+      "entity_type": "disease",
+      "aliases": [
+        {
+          "name": "Hypertension",
+          "language": "en"
+        },
+        {
+          "name": "原发性高血压",
+          "language": "zh"
+        },
+        {
+          "name": "Primary Hypertension",
+          "language": "en"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ICD-10",
+          "code": "I10"
+        }
+      ],
+      "category": "心血管疾病",
+      "description": "高血压是指动脉血压持续升高的慢性疾病，收缩压 ≥ 140 mmHg 和/或舒张压 ≥ 90 mmHg。 大多数患者早期无明显症状。部分出现： - 头晕 - 头痛 - 颈项板紧 - 心悸 - 疲劳 - 鼻出血 非同日 3 次测量，收缩压 ≥ 140 mmHg 和/或舒张压 ≥ 90 mmHg。 - **生活方式干预**：低盐饮食、减重、运动、戒烟限酒 - **药物治疗**： - ACEI/ARB 类...",
+      "properties": {
+        "filename": "hypertension.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 401,
+        "drug_type": ""
+      },
+      "relations": [
+        {
+          "subject": "高血压",
+          "relation": "HAS_SYMPTOM",
+          "object": "见正文症状章节"
+        },
+        {
+          "subject": "高血压",
+          "relation": "HAS_COMPLICATION",
+          "object": "见正文并发症章节"
+        },
+        {
+          "subject": "高血压",
+          "relation": "TREATED_BY",
+          "object": "见正文治疗方法章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Disease Knowledge (心血管疾病)",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:disease:脑卒中",
+      "name": "脑卒中",
+      "entity_type": "disease",
+      "aliases": [
+        {
+          "name": "Stroke",
+          "language": "en"
+        },
+        {
+          "name": "中风",
+          "language": "zh"
+        },
+        {
+          "name": "脑血管意外",
+          "language": "zh"
+        },
+        {
+          "name": "Cerebrovascular Accident",
+          "language": "en"
+        },
+        {
+          "name": "CVA",
+          "language": "en"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ICD-10",
+          "code": "I60-I69"
+        }
+      ],
+      "category": "神经系统疾病",
+      "description": "脑卒中是由于脑部血管突然阻塞（缺血性脑卒中）或破裂（出血性脑卒中）导致脑组织损伤的急性脑血管疾病。 使用 **FAST 原则**快速识别： - **F (Face)**：面部不对称、口角歪斜 - **A (Arm)**：一侧肢体无力或麻木 - **S (Speech)**：言语不清或理解困难 - **T (Time)**：时间就是大脑，立即拨打 120 其他症状：视力障碍、剧烈头痛、行走困难、意识...",
+      "properties": {
+        "filename": "stroke.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 580,
+        "drug_type": ""
+      },
+      "relations": [
+        {
+          "subject": "脑卒中",
+          "relation": "HAS_SYMPTOM",
+          "object": "见正文症状章节"
+        },
+        {
+          "subject": "脑卒中",
+          "relation": "HAS_COMPLICATION",
+          "object": "见正文并发症章节"
+        },
+        {
+          "subject": "脑卒中",
+          "relation": "TREATED_BY",
+          "object": "见正文治疗方法章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Disease Knowledge (神经系统疾病)",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:drug:阿莫西林",
+      "name": "阿莫西林",
+      "entity_type": "drug",
+      "aliases": [
+        {
+          "name": "Amoxicillin",
+          "language": "en"
+        },
+        {
+          "name": "Amoxil",
+          "language": "en"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ATC",
+          "code": "J01CA04"
+        }
+      ],
+      "category": "",
+      "description": "青霉素类广谱抗生素 敏感菌所致的各类感染： - 呼吸道感染：咽炎、扁桃体炎、鼻窦炎、中耳炎、肺炎 - 泌尿生殖道感染 - 皮肤软组织感染 - 幽门螺杆菌感染（联合用药） 与细菌青霉素结合蛋白 (PBPs) 结合，抑制细菌细胞壁合成，导致细菌裂解死亡。属于繁殖期杀菌剂。 - 胃肠道反应：恶心、腹泻 - 皮疹（荨麻疹） - 过敏反应（严重者可致过敏性休克） > **用药前须询问青霉素过敏史** - 青...",
+      "properties": {
+        "filename": "amoxicillin.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 418,
+        "drug_type": "青霉素类广谱抗生素"
+      },
+      "relations": [
+        {
+          "subject": "阿莫西林",
+          "relation": "TREATS",
+          "object": "见正文适应症章节"
+        },
+        {
+          "subject": "阿莫西林",
+          "relation": "HAS_ADVERSE_REACTION",
+          "object": "见正文不良反应章节"
+        },
+        {
+          "subject": "阿莫西林",
+          "relation": "CONTRAINDICATED_FOR",
+          "object": "见正文禁忌症章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Drug Knowledge",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:drug:阿司匹林",
+      "name": "阿司匹林",
+      "entity_type": "drug",
+      "aliases": [
+        {
+          "name": "Aspirin",
+          "language": "en"
+        },
+        {
+          "name": "Acetylsalicylic Acid",
+          "language": "en"
+        },
+        {
+          "name": "ASA",
+          "language": "en"
+        },
+        {
+          "name": "乙酰水杨酸",
+          "language": "zh"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ATC",
+          "code": "N02BA01"
+        }
+      ],
+      "category": "",
+      "description": "非甾体抗炎药 (NSAID) - **解热镇痛**：头痛、牙痛、肌肉痛、发热 - **抗血小板聚集**：预防心脑血管疾病 - 抑制环氧合酶 (COX)，减少前列腺素合成 → 发挥解热镇痛抗炎作用 - 低剂量不可逆抑制血小板 COX-1，抑制血栓素 A₂ 生成 → 抗血小板 - 胃肠道刺激（恶心、胃痛、消化道出血） - 过敏反应 - 出血风险增加 - 活动性消化道溃疡 - 出血性疾病 - 严重肝肾功...",
+      "properties": {
+        "filename": "aspirin.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 378,
+        "drug_type": "非甾体抗炎药 (NSAID)"
+      },
+      "relations": [
+        {
+          "subject": "阿司匹林",
+          "relation": "TREATS",
+          "object": "见正文适应症章节"
+        },
+        {
+          "subject": "阿司匹林",
+          "relation": "HAS_ADVERSE_REACTION",
+          "object": "见正文不良反应章节"
+        },
+        {
+          "subject": "阿司匹林",
+          "relation": "CONTRAINDICATED_FOR",
+          "object": "见正文禁忌症章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Drug Knowledge",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:drug:二甲双胍",
+      "name": "二甲双胍",
+      "entity_type": "drug",
+      "aliases": [
+        {
+          "name": "Metformin",
+          "language": "en"
+        },
+        {
+          "name": "Glucophage",
+          "language": "en"
+        },
+        {
+          "name": "格华止",
+          "language": "zh"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ATC",
+          "code": "A10BA02"
+        }
+      ],
+      "category": "",
+      "description": "双胍类口服降糖药 2 型糖尿病的一线治疗药物，尤其适用于超重和肥胖的 2 型糖尿病患者。 抑制肝糖输出、增加外周组织对葡萄糖的摄取和利用、改善胰岛素敏感性。 - 胃肠道反应（最常见）：恶心、腹泻、食欲减退 - 口中有金属味 - 乳酸酸中毒（罕见但严重） - 严重肾功能不全（eGFR < 30 ml/min） - 肝功能衰竭 - 心力衰竭 - 严重感染 - 酗酒者 - 起始剂量：500 mg 每日 ...",
+      "properties": {
+        "filename": "metformin.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 348,
+        "drug_type": "双胍类口服降糖药"
+      },
+      "relations": [
+        {
+          "subject": "二甲双胍",
+          "relation": "TREATS",
+          "object": "见正文适应症章节"
+        },
+        {
+          "subject": "二甲双胍",
+          "relation": "HAS_ADVERSE_REACTION",
+          "object": "见正文不良反应章节"
+        },
+        {
+          "subject": "二甲双胍",
+          "relation": "CONTRAINDICATED_FOR",
+          "object": "见正文禁忌症章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Drug Knowledge",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:drug:硝苯地平",
+      "name": "硝苯地平",
+      "entity_type": "drug",
+      "aliases": [
+        {
+          "name": "Nifedipine",
+          "language": "en"
+        },
+        {
+          "name": "Adalat",
+          "language": "en"
+        },
+        {
+          "name": "心痛定",
+          "language": "zh"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ATC",
+          "code": "C08CA05"
+        }
+      ],
+      "category": "",
+      "description": "二氢吡啶类钙通道阻滞剂 (CCB) - 原发性高血压 - 变异型心绞痛 (Prinzmetal's Angina) - 慢性稳定型心绞痛 选择性阻断血管平滑肌和心肌细胞的 L 型钙通道，抑制钙离子内流，扩张外周血管和冠状动脉，降低血压和心肌耗氧量。 - 头痛 - 面部潮红 - 踝部水肿 - 心悸 - 牙龈增生 - 短效制剂快速降压可能引起反射性心动过速 - 严重主动脉瓣狭窄 - 不稳定心绞痛（短效...",
+      "properties": {
+        "filename": "nifedipine.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 397,
+        "drug_type": "二氢吡啶类钙通道阻滞剂 (CCB)"
+      },
+      "relations": [
+        {
+          "subject": "硝苯地平",
+          "relation": "TREATS",
+          "object": "见正文适应症章节"
+        },
+        {
+          "subject": "硝苯地平",
+          "relation": "HAS_ADVERSE_REACTION",
+          "object": "见正文不良反应章节"
+        },
+        {
+          "subject": "硝苯地平",
+          "relation": "CONTRAINDICATED_FOR",
+          "object": "见正文禁忌症章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Drug Knowledge",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    },
+    {
+      "entity_id": "markdown:drug:奥美拉唑",
+      "name": "奥美拉唑",
+      "entity_type": "drug",
+      "aliases": [
+        {
+          "name": "Omeprazole",
+          "language": "en"
+        },
+        {
+          "name": "Prilosec",
+          "language": "en"
+        },
+        {
+          "name": "洛赛克",
+          "language": "zh"
+        }
+      ],
+      "standard_codes": [
+        {
+          "system": "ATC",
+          "code": "A02BC01"
+        }
+      ],
+      "category": "",
+      "description": "质子泵抑制剂 (PPI) - 胃食管反流病 (GERD) - 消化性溃疡（胃溃疡、十二指肠溃疡） - 根除幽门螺杆菌（联合抗生素） - 卓-艾综合征 (Zollinger-Ellison Syndrome) - 预防 NSAID 相关性溃疡 不可逆地抑制胃壁细胞 H⁺/K⁺-ATP 酶（质子泵），强效抑制胃酸分泌的最后环节。抑酸作用可持续 24 小时以上。 - 头痛、腹胀、恶心、腹泻 - **长期...",
+      "properties": {
+        "filename": "omeprazole.md",
+        "created_date": "2026-07-25",
+        "updated_date": "2026-07-25",
+        "char_count": 488,
+        "drug_type": "质子泵抑制剂 (PPI)"
+      },
+      "relations": [
+        {
+          "subject": "奥美拉唑",
+          "relation": "TREATS",
+          "object": "见正文适应症章节"
+        },
+        {
+          "subject": "奥美拉唑",
+          "relation": "HAS_ADVERSE_REACTION",
+          "object": "见正文不良反应章节"
+        },
+        {
+          "subject": "奥美拉唑",
+          "relation": "CONTRAINDICATED_FOR",
+          "object": "见正文禁忌症章节"
+        }
+      ],
+      "provenance": [
+        {
+          "source_name": "Manual Curation — Drug Knowledge",
+          "license": "Public Domain — factual medical knowledge, independently written",
+          "adapter": "markdown"
+        }
+      ],
+      "quality": {
+        "level": "pass",
+        "errors": [],
+        "warnings": []
+      },
+      "pipeline_processed_at": "2026-07-26",
+      "pipeline_status": "pass"
+    }
+  ],
+  "relations": [
+    {
+      "subject": "支气管哮喘",
+      "relation": "HAS_SYMPTOM",
+      "object": "见正文症状章节"
+    },
+    {
+      "subject": "支气管哮喘",
+      "relation": "HAS_COMPLICATION",
+      "object": "见正文并发症章节"
+    },
+    {
+      "subject": "支气管哮喘",
+      "relation": "TREATED_BY",
+      "object": "见正文治疗方法章节"
+    },
+    {
+      "subject": "慢性胃炎",
+      "relation": "HAS_SYMPTOM",
+      "object": "见正文症状章节"
+    },
+    {
+      "subject": "慢性胃炎",
+      "relation": "HAS_COMPLICATION",
+      "object": "见正文并发症章节"
+    },
+    {
+      "subject": "慢性胃炎",
+      "relation": "TREATED_BY",
+      "object": "见正文治疗方法章节"
+    },
+    {
+      "subject": "感冒",
+      "relation": "HAS_SYMPTOM",
+      "object": "见正文症状章节"
+    },
+    {
+      "subject": "感冒",
+      "relation": "HAS_COMPLICATION",
+      "object": "见正文并发症章节"
+    },
+    {
+      "subject": "感冒",
+      "relation": "TREATED_BY",
+      "object": "见正文治疗方法章节"
+    },
+    {
+      "subject": "慢性阻塞性肺疾病",
+      "relation": "HAS_SYMPTOM",
+      "object": "见正文症状章节"
+    },
+    {
+      "subject": "慢性阻塞性肺疾病",
+      "relation": "HAS_COMPLICATION",
+      "object": "见正文并发症章节"
+    },
+    {
+      "subject": "慢性阻塞性肺疾病",
+      "relation": "TREATED_BY",
+      "object": "见正文治疗方法章节"
+    },
+    {
+      "subject": "冠心病",
+      "relation": "HAS_SYMPTOM",
+      "object": "见正文症状章节"
+    },
+    {
+      "subject": "冠心病",
+      "relation": "HAS_COMPLICATION",
+      "object": "见正文并发症章节"
+    },
+    {
+      "subject": "冠心病",
+      "relation": "TREATED_BY",
+      "object": "见正文治疗方法章节"
+    },
+    {
+      "subject": "2型糖尿病",
+      "relation": "HAS_SYMPTOM",
+      "object": "见正文症状章节"
+    },
+    {
+      "subject": "2型糖尿病",
+      "relation": "HAS_COMPLICATION",
+      "object": "见正文并发症章节"
+    },
+    {
+      "subject": "2型糖尿病",
+      "relation": "TREATED_BY",
+      "object": "见正文治疗方法章节"
+    },
+    {
+      "subject": "高脂血症",
+      "relation": "HAS_SYMPTOM",
+      "object": "见正文症状章节"
+    },
+    {
+      "subject": "高脂血症",
+      "relation": "HAS_COMPLICATION",
+      "object": "见正文并发症章节"
+    },
+    {
+      "subject": "高脂血症",
+      "relation": "TREATED_BY",
+      "object": "见正文治疗方法章节"
+    },
+    {
+      "subject": "高血压",
+      "relation": "HAS_SYMPTOM",
+      "object": "见正文症状章节"
+    },
+    {
+      "subject": "高血压",
+      "relation": "HAS_COMPLICATION",
+      "object": "见正文并发症章节"
+    },
+    {
+      "subject": "高血压",
+      "relation": "TREATED_BY",
+      "object": "见正文治疗方法章节"
+    },
+    {
+      "subject": "脑卒中",
+      "relation": "HAS_SYMPTOM",
+      "object": "见正文症状章节"
+    },
+    {
+      "subject": "脑卒中",
+      "relation": "HAS_COMPLICATION",
+      "object": "见正文并发症章节"
+    },
+    {
+      "subject": "脑卒中",
+      "relation": "TREATED_BY",
+      "object": "见正文治疗方法章节"
+    },
+    {
+      "subject": "阿莫西林",
+      "relation": "TREATS",
+      "object": "见正文适应症章节"
+    },
+    {
+      "subject": "阿莫西林",
+      "relation": "HAS_ADVERSE_REACTION",
+      "object": "见正文不良反应章节"
+    },
+    {
+      "subject": "阿莫西林",
+      "relation": "CONTRAINDICATED_FOR",
+      "object": "见正文禁忌症章节"
+    },
+    {
+      "subject": "阿司匹林",
+      "relation": "TREATS",
+      "object": "见正文适应症章节"
+    },
+    {
+      "subject": "阿司匹林",
+      "relation": "HAS_ADVERSE_REACTION",
+      "object": "见正文不良反应章节"
+    },
+    {
+      "subject": "阿司匹林",
+      "relation": "CONTRAINDICATED_FOR",
+      "object": "见正文禁忌症章节"
+    },
+    {
+      "subject": "二甲双胍",
+      "relation": "TREATS",
+      "object": "见正文适应症章节"
+    },
+    {
+      "subject": "二甲双胍",
+      "relation": "HAS_ADVERSE_REACTION",
+      "object": "见正文不良反应章节"
+    },
+    {
+      "subject": "二甲双胍",
+      "relation": "CONTRAINDICATED_FOR",
+      "object": "见正文禁忌症章节"
+    },
+    {
+      "subject": "硝苯地平",
+      "relation": "TREATS",
+      "object": "见正文适应症章节"
+    },
+    {
+      "subject": "硝苯地平",
+      "relation": "HAS_ADVERSE_REACTION",
+      "object": "见正文不良反应章节"
+    },
+    {
+      "subject": "硝苯地平",
+      "relation": "CONTRAINDICATED_FOR",
+      "object": "见正文禁忌症章节"
+    },
+    {
+      "subject": "奥美拉唑",
+      "relation": "TREATS",
+      "object": "见正文适应症章节"
+    },
+    {
+      "subject": "奥美拉唑",
+      "relation": "HAS_ADVERSE_REACTION",
+      "object": "见正文不良反应章节"
+    },
+    {
+      "subject": "奥美拉唑",
+      "relation": "CONTRAINDICATED_FOR",
+      "object": "见正文禁忌症章节"
+    }
+  ]
+}
