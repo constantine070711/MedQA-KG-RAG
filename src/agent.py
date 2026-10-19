@@ -27,7 +27,7 @@
 import sys
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Optional, TypedDict
+from typing import Any, AsyncIterator, Optional, TypedDict
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
@@ -36,7 +36,11 @@ if str(_PROJECT_ROOT) not in sys.path:
 from langgraph.graph import StateGraph, START, END
 from langgraph.types import RunnableConfig
 
-from src.medical_core.safety import SafetyChecker, MEDICAL_DISCLAIMER
+from src.medical_core.safety import (
+    SafetyChecker,
+    MEDICAL_DISCLAIMER,
+    SYSTEM_PROMPT_SAFE,
+)
 from src.evidence_fusion import (
     FusionConfig,
     NEO4J_UNAVAILABLE_KEY,
@@ -242,6 +246,7 @@ class MedQAAgent:
         config: Optional[FusionConfig] = None,
         mode: str = "mix",
         disable_generation_cache: bool = True,
+        enforce_safe_generation_prompt: bool = False,
     ):
         self._engine = engine
         self._retriever = retriever
@@ -250,6 +255,7 @@ class MedQAAgent:
         self._config = config or FusionConfig()
         self.mode = mode
         self.disable_generation_cache = disable_generation_cache
+        self.enforce_safe_generation_prompt = enforce_safe_generation_prompt
         self._compiled_graph = None
 
     # ----------------------------------------------------------
@@ -319,9 +325,12 @@ class MedQAAgent:
         state: AgentState,
         config: Optional[RunnableConfig] = None,
     ) -> dict:
+        base_prompt = state.get("base_safety_prompt")
+        if self.enforce_safe_generation_prompt and base_prompt is None:
+            base_prompt = SYSTEM_PROMPT_SAFE
         system_prompt = build_fusion_prompt(
             state.get("neo4j_evidence"),
-            base_prompt=state.get("base_safety_prompt"),
+            base_prompt=base_prompt,
             config=self._config,
         )
         # Phase 9 P2: conversation_context（Memory）仅作为 LLM prompt 背景追加。
@@ -572,6 +581,23 @@ class MedQAAgent:
         if conversation_context:
             config = {"configurable": {"conversation_context": conversation_context}}
         return await self._compiled().ainvoke(input_state, config=config)
+
+    async def astream_state(
+        self, question: str, conversation_context: Optional[str] = None
+    ) -> AsyncIterator[dict]:
+        """Yield LangGraph node updates for browser status streaming."""
+
+        input_state = self._init_state(question)
+        config = None
+        if conversation_context:
+            config = {"configurable": {"conversation_context": conversation_context}}
+        async for update in self._compiled().astream(
+            input_state,
+            config=config,
+            stream_mode="updates",
+        ):
+            if isinstance(update, dict):
+                yield update
 
     async def run(
         self, question: str, conversation_context: Optional[str] = None

@@ -6,7 +6,9 @@
 
 面向医疗知识问答场景，将 **Knowledge Graph** 与 **RAG** 融合，内置安全控制、证据融合与来源引用机制的智能问答系统。
 
-![Python](https://img.shields.io/badge/Python-3.11-blue) ![LightRAG](https://img.shields.io/badge/LightRAG-1.5.4-green) ![LangGraph](https://img.shields.io/badge/LangGraph-Agent-purple) ![Neo4j](https://img.shields.io/badge/Neo4j-Graph-blue) ![Streamlit](https://img.shields.io/badge/Streamlit-Web%20UI-red) ![DeepSeek](https://img.shields.io/badge/LLM-DeepSeek-blueviolet)
+![Python](https://img.shields.io/badge/Python-3.11-blue) ![Next.js](https://img.shields.io/badge/Next.js-16-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-SSE-009688) ![LightRAG](https://img.shields.io/badge/LightRAG-1.5.4-green) ![LangGraph](https://img.shields.io/badge/LangGraph-Agent-purple) ![Neo4j](https://img.shields.io/badge/Neo4j-Graph-blue)
+
+[![MedQA v2 CI](https://github.com/constantine070711/MedQA-KG-RAG/actions/workflows/v2-ci.yml/badge.svg?branch=v2)](https://github.com/constantine070711/MedQA-KG-RAG/actions/workflows/v2-ci.yml)
 
 </div>
 
@@ -54,6 +56,11 @@
 
 > ⚠️ 本项目定位为 **医疗知识辅助** 的工程系统与科研实验基础，**不替代医生诊断**。仅供学习、研究与演示使用。
 
+### 版本说明
+
+- **v2（当前开发线）**：Next.js + TypeScript 证据工作台，FastAPI SSE 流式接口，保留现有 LangGraph / RAG / Neo4j 核心。
+- **v1.0.0（已保留）**：原始 Streamlit 版本，可通过 Git tag `v1.0.0` 查看。
+
 ---
 
 ## 2. 项目背景
@@ -88,7 +95,7 @@
 | 📚 **来源引用** | Citation Extractor / Verifier，计算引用可追溯比例（grounded ratio） |
 | 💬 **多轮对话** | 有限窗口 Memory（最近 3 轮 / 600 字符），仅作生成背景，不污染证据 |
 | 📊 **可观测性** | request_id + JSONL 结构化日志 + 敏感信息脱敏 + 日志轮转 |
-| 🖥️ **Web UI** | Streamlit 对话式界面 + 知识图谱可视化（pyvis / vis.js 内联，无 CDN 依赖） |
+| 🖥️ **Web UI** | v2：Next.js 证据工作台 + SSE 流式回答；v1：Streamlit + pyvis |
 | 🧪 **评测体系** | 完整评测框架：`evaluation/` 模块 + 28 题固定评测集 + 回归测试（571 项） |
 
 ---
@@ -104,7 +111,8 @@
 | LLM | **DeepSeek API**（OpenAI 兼容接口） |
 | Embedding | **bge-small-zh-v1.5**（默认，512 维，本地加载）· bge-m3（本地可用，可切换） |
 | Reranker | bge-reranker-base（实验评估阶段） |
-| Web UI | **Streamlit** + **pyvis**（KG 可视化） |
+| Web UI | **Next.js 16 + TypeScript**（v2）· Streamlit + pyvis（v1） |
+| API | **FastAPI + Server-Sent Events** |
 | 评测 | `evaluation/` 自研指标 + `unittest` 回归测试 |
 | 部署 | Docker Compose（Neo4j） |
 
@@ -272,7 +280,16 @@ flowchart LR
 
 ```
 MedQA-GitHub/
-├── app/                     # Streamlit Web UI
+├── api/                     # v2 FastAPI + SSE 网关
+│   ├── main.py              # /api/health, /api/chat/stream
+│   ├── runtime.py           # LangGraph 节点事件 → SSE
+│   └── schemas.py           # 请求模型与历史窗口
+├── web/                     # v2 Next.js + TypeScript 证据工作台
+│   └── src/
+│       ├── app/             # App Router 页面与样式
+│       ├── components/      # 工作台 / 证据检查器 / 图谱视图
+│       └── lib/             # SSE 客户端、类型与展示纯函数
+├── app/                     # v1 Streamlit Web UI（保留）
 │   ├── streamlit_app.py     # 对话式问答入口（streamlit run app/streamlit_app.py）
 │   └── ui_helpers.py        # 展示逻辑 / Memory 构建 / Agent 调用
 ├── src/                     # 核心生产代码
@@ -322,6 +339,7 @@ MedQA-GitHub/
 ## 13. 环境要求
 
 - **Python 3.11**
+- **Node.js 20+**（v2 前端）
 - **DeepSeek API Key**（[platform.deepseek.com](https://platform.deepseek.com)）
 - **Neo4j**（可选，可通过 `docker compose up -d neo4j` 一键启动；不启动时系统自动降级为纯 LightRAG 检索）
 - 本机内存建议 ≥ 8GB（bge embedding + LightRAG 加载）
@@ -332,8 +350,8 @@ MedQA-GitHub/
 
 ```bash
 # 1. 克隆仓库
-git clone <your-repo-url>
-cd MedQA-GitHub
+git clone https://github.com/constantine070711/MedQA-KG-RAG.git
+cd MedQA-KG-RAG
 
 # 2. 创建虚拟环境（Windows）
 python -m venv venv
@@ -345,6 +363,11 @@ pip install -r requirements.txt
 # 4. 配置环境变量
 copy .env.example .env
 #   编辑 .env，填入 DEEPSEEK_API_KEY（与可选的 NEO4J_PASSWORD）
+
+# 5. 安装 v2 前端（新终端）
+cd web
+npm install
+copy .env.example .env.local
 ```
 
 > 如果 `sentence-transformers` 安装时网络受限，可先单独安装合适版本的 torch 再安装依赖。
@@ -369,6 +392,7 @@ NEO4J_PASSWORD=your_neo4j_password_here
 # 应用
 APP_HOST=127.0.0.1
 APP_PORT=8501
+APP_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 LOG_LEVEL=INFO
 ```
 
@@ -393,7 +417,14 @@ python scripts/import_curated_to_neo4j.py  # 导入 curated 临床层
 ## 16. 启动
 
 ```bash
-# Web UI（推荐）
+# v2 API（终端 1）
+uvicorn api.main:app --reload --port 8000
+
+# v2 Web UI（终端 2）
+cd web
+npm run dev
+
+# v1 Streamlit（仍可运行）
 streamlit run app/streamlit_app.py
 
 # 命令行问答（含图谱证据融合）

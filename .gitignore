@@ -20,6 +20,13 @@ build/
 .pytest_cache/
 .mypy_cache/
 
+# ---------- v2 Web ----------
+web/node_modules/
+web/.next/
+web/out/
+web/.env*.local
+web/*.tsbuildinfo
+
 # ---------- 本地模型权重（HuggingFace 可自动下载，不入库）----------
 models/
 
