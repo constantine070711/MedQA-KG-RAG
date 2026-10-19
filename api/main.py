@@ -42,10 +42,13 @@ app.add_middleware(
     allow_headers=["Content-Type", "Accept"],
 )
 
-_runtime = AgentRuntime()
+_runtime: AgentRuntime | None = None
 
 
 def get_runtime() -> AgentRuntime:
+    global _runtime
+    if _runtime is None:
+        _runtime = AgentRuntime()
     return _runtime
 
 
