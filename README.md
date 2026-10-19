@@ -61,6 +61,14 @@
 - **v2（当前开发线）**：Next.js + TypeScript 证据工作台，FastAPI SSE 流式接口，保留现有 LangGraph / RAG / Neo4j 核心。
 - **v1.0.0（已保留）**：原始 Streamlit 版本，可通过 Git tag `v1.0.0` 查看。
 
+### 赛事材料
+
+- [真实开发时间线](docs/development-history.md)
+- [评分项证据矩阵](docs/competition/scoring-matrix.md)
+- [5-8 分钟演示脚本](docs/competition/demo-script.md)
+- [技术文档目录](docs/competition/technical-report-outline.md)
+- [提交检查清单](docs/competition/submission-checklist.md)
+
 ---
 
 ## 2. 项目背景
