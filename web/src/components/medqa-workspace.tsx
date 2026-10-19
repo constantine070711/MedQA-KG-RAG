@@ -19,6 +19,7 @@ import {
   Stethoscope,
   Trash2,
   UserRound,
+  Wrench,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -145,6 +146,16 @@ export function MedQAWorkspace() {
     return undefined;
   }, [messages]);
 
+  const latestTools = useMemo(() => {
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      const message = messages[index];
+      if (message.role === "assistant" && message.response) {
+        return message.tools ?? [];
+      }
+    }
+    return [];
+  }, [messages]);
+
   useEffect(() => {
     let active = true;
     fetch(`${API_BASE}/api/health`)
@@ -245,6 +256,23 @@ export function MedQAWorkspace() {
             updateAssistant(assistantId, (message) => ({
               ...message,
               content: `${message.content}${event.delta}`,
+            }));
+            return;
+          }
+
+          if (event.type === "tool") {
+            updateAssistant(assistantId, (message) => ({
+              ...message,
+              tools: [
+                ...(message.tools ?? []),
+                {
+                  tool: event.tool,
+                  label: event.label,
+                  status: event.status,
+                  summary: event.summary,
+                  elapsed_ms: event.elapsed_ms,
+                },
+              ],
             }));
             return;
           }
@@ -599,7 +627,7 @@ export function MedQAWorkspace() {
         </section>
 
         <aside className="hidden min-h-0 border-l border-[var(--line)] xl:block">
-          <EvidencePanel response={latestResponse} />
+          <EvidencePanel response={latestResponse} tools={latestTools} />
         </aside>
       </main>
 
@@ -614,6 +642,7 @@ export function MedQAWorkspace() {
           />
           <EvidencePanel
             response={latestResponse}
+            tools={latestTools}
             drawer
             onClose={() => setDrawerOpen(false)}
           />
@@ -643,6 +672,7 @@ function AssistantMessage({
   const safety = safetyMeta(message.response?.safety_level);
   const sources = sourceLabels(message.response);
   const decision = message.response?.reliability_decision;
+  const toolCount = message.tools?.length ?? 0;
 
   return (
     <article className="message-enter flex gap-3">
@@ -718,6 +748,12 @@ function AssistantMessage({
                 {source}
               </span>
             ))}
+            {toolCount > 0 ? (
+              <span className="flex items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--surface-raised)] px-2 py-1 text-[9px] font-medium text-[var(--ink-soft)]">
+                <Wrench className="size-2.5" aria-hidden="true" />
+                {toolCount} 个工具
+              </span>
+            ) : null}
             <button
               type="button"
               onClick={onCopy}

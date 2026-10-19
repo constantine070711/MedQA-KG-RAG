@@ -6,7 +6,7 @@
 
 面向医疗知识问答场景，将 **Knowledge Graph** 与 **RAG** 融合，内置安全控制、证据融合与来源引用机制的智能问答系统。
 
-![Python](https://img.shields.io/badge/Python-3.11-blue) ![Next.js](https://img.shields.io/badge/Next.js-16-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-SSE-009688) ![LightRAG](https://img.shields.io/badge/LightRAG-1.5.4-green) ![LangGraph](https://img.shields.io/badge/LangGraph-Agent-purple) ![Neo4j](https://img.shields.io/badge/Neo4j-Graph-blue)
+![Python](https://img.shields.io/badge/Python-3.11-blue) ![Next.js](https://img.shields.io/badge/Next.js-16-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-SSE-009688) ![MCP](https://img.shields.io/badge/MCP-Tools-6f42c1) ![LightRAG](https://img.shields.io/badge/LightRAG-1.5.4-green) ![LangGraph](https://img.shields.io/badge/LangGraph-Agent-purple) ![Neo4j](https://img.shields.io/badge/Neo4j-Graph-blue)
 
 [![MedQA v2 CI](https://github.com/constantine070711/MedQA-KG-RAG/actions/workflows/v2-ci.yml/badge.svg?branch=v2)](https://github.com/constantine070711/MedQA-KG-RAG/actions/workflows/v2-ci.yml)
 
@@ -97,6 +97,7 @@
 | 📊 **可观测性** | request_id + JSONL 结构化日志 + 敏感信息脱敏 + 日志轮转 |
 | 🖥️ **Web UI** | v2：Next.js 证据工作台 + SSE 流式回答；v1：Streamlit + pyvis |
 | 🧪 **评测体系** | 完整评测框架：`evaluation/` 模块 + 28 题固定评测集 + 回归测试（571 项） |
+| 🧰 **MCP / 工具调用** | LightRAG、Neo4j 实体/关系/路径查询封装为受控工具；stdio MCP Server + HTTP 工具网关 + 前端调用轨迹 |
 
 ---
 
@@ -113,6 +114,7 @@
 | Reranker | bge-reranker-base（实验评估阶段） |
 | Web UI | **Next.js 16 + TypeScript**（v2）· Streamlit + pyvis（v1） |
 | API | **FastAPI + Server-Sent Events** |
+| Agent Tools | **MCP stdio server + HTTP tool gateway** |
 | 评测 | `evaluation/` 自研指标 + `unittest` 回归测试 |
 | 部署 | Docker Compose（Neo4j） |
 
@@ -284,6 +286,8 @@ MedQA-GitHub/
 │   ├── main.py              # /api/health, /api/chat/stream
 │   ├── runtime.py           # LangGraph 节点事件 → SSE
 │   └── schemas.py           # 请求模型与历史窗口
+├── mcp_server/              # MCP stdio 服务
+│   └── medqa_mcp.py         # 5 个只读医疗知识工具
 ├── web/                     # v2 Next.js + TypeScript 证据工作台
 │   └── src/
 │       ├── app/             # App Router 页面与样式
@@ -423,6 +427,9 @@ uvicorn api.main:app --reload --port 8000
 # v2 Web UI（终端 2）
 cd web
 npm run dev
+
+# MCP Server（stdio，可选）
+python -m mcp_server.medqa_mcp
 
 # v1 Streamlit（仍可运行）
 streamlit run app/streamlit_app.py

@@ -11,6 +11,8 @@ All notable changes to MedQA are documented here.
 - Streaming answer events, workflow-stage status, and cancellation.
 - Evidence inspector for safety level, reliability, source coverage, citations,
   and Neo4j triples.
+- Controlled medical tool layer with HTTP execution and browser tool traces.
+- MCP stdio server exposing five read-only retrieval tools.
 - Responsive desktop and mobile layouts with a dedicated evidence drawer.
 - v2 safe-generation mode that prevents unsolicited dosage details.
 

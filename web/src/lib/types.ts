@@ -82,11 +82,20 @@ export interface HistoryTurn {
   is_final_refusal?: boolean;
 }
 
+export interface ToolTrace {
+  tool: string;
+  label: string;
+  status: string;
+  summary: string;
+  elapsed_ms?: number;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   response?: AgentResponse;
+  tools?: ToolTrace[];
   streaming?: boolean;
   error?: string;
 }
@@ -103,6 +112,9 @@ export type StreamEvent =
       type: "answer_delta";
       delta: string;
     }
+  | ({
+      type: "tool";
+    } & ToolTrace)
   | {
       type: "final";
       request_id: string;
