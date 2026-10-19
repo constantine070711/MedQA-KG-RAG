@@ -9,6 +9,8 @@ import {
   Copy,
   Database,
   FileText,
+  Mic,
+  MicOff,
   Network,
   PanelRightOpen,
   Plus,
@@ -19,6 +21,8 @@ import {
   Stethoscope,
   Trash2,
   UserRound,
+  Volume2,
+  VolumeX,
   Wrench,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -27,6 +31,7 @@ import remarkGfm from "remark-gfm";
 
 import { EvidencePanel } from "@/components/evidence-panel";
 import { WorkflowStatus } from "@/components/workflow-status";
+import { useSpeechInput, useSpeechOutput } from "@/hooks/use-speech";
 import { API_BASE, streamChat } from "@/lib/api";
 import { decisionLabel, safetyMeta, sourceLabels } from "@/lib/format";
 import type {
@@ -133,9 +138,12 @@ export function MedQAWorkspace() {
   const [mode, setMode] = useState<RetrievalMode>("mix");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const speechInput = useSpeechInput((text) => setInput(text));
+  const speechOutput = useSpeechOutput(() => setSpeakingMessageId(null));
 
   const latestResponse = useMemo(() => {
     for (let index = messages.length - 1; index >= 0; index -= 1) {
@@ -213,6 +221,8 @@ export function MedQAWorkspace() {
     }
 
     const history = buildHistory(messages);
+    speechInput.stop();
+    speechOutput.stop();
     const userMessage: ChatMessage = {
       id: createId(),
       role: "user",
@@ -328,6 +338,8 @@ export function MedQAWorkspace() {
 
   function resetConversation() {
     abortRef.current?.abort();
+    speechInput.stop();
+    speechOutput.stop();
     setMessages([]);
     setStage(null);
     setIsStreaming(false);
@@ -559,6 +571,19 @@ export function MedQAWorkspace() {
                         }
                         copied={copied}
                         onOpenEvidence={() => setDrawerOpen(true)}
+                        speechSupported={speechOutput.supported}
+                        speechPlaying={speakingMessageId === message.id}
+                        onToggleSpeech={() => {
+                          const answer =
+                            message.response?.answer || message.content;
+                          if (speakingMessageId === message.id) {
+                            speechOutput.stop();
+                            setSpeakingMessageId(null);
+                          } else if (answer) {
+                            speechOutput.speak(answer);
+                            setSpeakingMessageId(message.id);
+                          }
+                        }}
                       />
                     ),
                   )}
@@ -597,6 +622,33 @@ export function MedQAWorkspace() {
                   aria-label="医疗知识问题"
                   className="thin-scrollbar max-h-36 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm leading-6 text-[var(--ink)] outline-none placeholder:text-[var(--ink-faint)]"
                 />
+                <button
+                  type="button"
+                  onClick={speechInput.toggle}
+                  disabled={!speechInput.supported || isStreaming}
+                  title={
+                    speechInput.supported
+                      ? speechInput.listening
+                        ? "停止语音输入"
+                        : "语音输入"
+                      : "当前浏览器不支持语音输入"
+                  }
+                  aria-label={
+                    speechInput.listening ? "停止语音输入" : "语音输入"
+                  }
+                  aria-pressed={speechInput.listening}
+                  className={`flex size-10 shrink-0 items-center justify-center rounded-lg transition disabled:opacity-35 ${
+                    speechInput.listening
+                      ? "bg-[var(--danger-soft)] text-[var(--danger)]"
+                      : "text-[var(--ink-soft)] hover:bg-[var(--surface-muted)] hover:text-[var(--ink)]"
+                  }`}
+                >
+                  {speechInput.listening ? (
+                    <MicOff className="size-4" aria-hidden="true" />
+                  ) : (
+                    <Mic className="size-4" aria-hidden="true" />
+                  )}
+                </button>
                 {isStreaming ? (
                   <button
                     type="button"
@@ -619,6 +671,14 @@ export function MedQAWorkspace() {
                   </button>
                 )}
               </div>
+              {speechInput.error ? (
+                <p
+                  role="alert"
+                  className="mt-2 text-center text-[10px] text-[var(--danger)]"
+                >
+                  {speechInput.error}
+                </p>
+              ) : null}
               <p className="mt-2 text-center text-[10px] leading-4 text-[var(--ink-faint)]">
                 医疗知识辅助，不替代医生诊断或处方。
               </p>
@@ -659,6 +719,9 @@ interface AssistantMessageProps {
   copied: boolean;
   onCopy: () => void;
   onOpenEvidence: () => void;
+  speechSupported: boolean;
+  speechPlaying: boolean;
+  onToggleSpeech: () => void;
 }
 
 function AssistantMessage({
@@ -668,6 +731,9 @@ function AssistantMessage({
   copied,
   onCopy,
   onOpenEvidence,
+  speechSupported,
+  speechPlaying,
+  onToggleSpeech,
 }: AssistantMessageProps) {
   const safety = safetyMeta(message.response?.safety_level);
   const sources = sourceLabels(message.response);
@@ -754,6 +820,28 @@ function AssistantMessage({
                 {toolCount} 个工具
               </span>
             ) : null}
+            <button
+              type="button"
+              onClick={onToggleSpeech}
+              disabled={!speechSupported}
+              title={
+                speechSupported
+                  ? speechPlaying
+                    ? "停止朗读"
+                    : "朗读回答"
+                  : "当前浏览器不支持语音朗读"
+              }
+              aria-label={speechPlaying ? "停止朗读" : "朗读回答"}
+              aria-pressed={speechPlaying}
+              className="flex min-h-8 items-center gap-1 rounded-md px-2 text-[10px] text-[var(--ink-faint)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--ink)] disabled:opacity-35"
+            >
+              {speechPlaying ? (
+                <VolumeX className="size-3" aria-hidden="true" />
+              ) : (
+                <Volume2 className="size-3" aria-hidden="true" />
+              )}
+              {speechPlaying ? "停止" : "朗读"}
+            </button>
             <button
               type="button"
               onClick={onCopy}
