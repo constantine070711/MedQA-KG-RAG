@@ -1,0 +1,221 @@
+@import "tailwindcss";
+
+:root {
+  --canvas: #f3f7f6;
+  --surface: #ffffff;
+  --surface-raised: #fbfdfc;
+  --surface-muted: #edf4f2;
+  --ink: #152422;
+  --ink-soft: #526663;
+  --ink-faint: #7b8d8a;
+  --line: #d8e3e0;
+  --line-strong: #bccdc9;
+  --primary: #0b726b;
+  --primary-strong: #075a55;
+  --primary-soft: #dff3ef;
+  --evidence: #0f8a68;
+  --evidence-soft: #e1f5ed;
+  --caution: #9a6509;
+  --caution-soft: #fff4d8;
+  --danger: #b42318;
+  --danger-soft: #fff0ee;
+  --focus: #087f77;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    linear-gradient(rgba(21, 36, 34, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(21, 36, 34, 0.025) 1px, transparent 1px),
+    var(--canvas);
+  background-size: 32px 32px;
+  color: var(--ink);
+  font-family:
+    "Aptos",
+    "Noto Sans SC",
+    "Microsoft YaHei UI",
+    "Microsoft YaHei",
+    ui-sans-serif,
+    sans-serif;
+  font-feature-settings: "ss01" 1, "cv02" 1;
+}
+
+button,
+textarea,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+::selection {
+  background: #bfe9e1;
+  color: #073f3b;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--focus) 38%, transparent);
+  outline-offset: 2px;
+}
+
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #b8cbc7 transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: #b8cbc7;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+.prose-medical {
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.prose-medical > :first-child {
+  margin-top: 0;
+}
+
+.prose-medical > :last-child {
+  margin-bottom: 0;
+}
+
+.prose-medical p,
+.prose-medical ul,
+.prose-medical ol,
+.prose-medical blockquote {
+  margin: 0.7rem 0;
+}
+
+.prose-medical h1,
+.prose-medical h2,
+.prose-medical h3 {
+  margin: 1.1rem 0 0.5rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.prose-medical ul,
+.prose-medical ol {
+  padding-left: 1.3rem;
+}
+
+.prose-medical ul {
+  list-style: disc;
+}
+
+.prose-medical ol {
+  list-style: decimal;
+}
+
+.prose-medical strong {
+  color: #0a5e59;
+  font-weight: 650;
+}
+
+.prose-medical blockquote {
+  border-left: 3px solid #98c9c1;
+  padding: 0.15rem 0 0.15rem 0.9rem;
+  color: var(--ink-soft);
+}
+
+.prose-medical code {
+  border-radius: 5px;
+  background: var(--surface-muted);
+  padding: 0.12rem 0.35rem;
+  font-size: 0.9em;
+}
+
+.prose-medical hr {
+  margin: 1.2rem 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.prose-medical a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.stream-caret::after {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 3px;
+  background: var(--primary);
+  content: "";
+  vertical-align: -0.12em;
+  animation: caret-blink 1s steps(2, start) infinite;
+}
+
+.status-pulse {
+  animation: status-pulse 1.8s ease-in-out infinite;
+}
+
+.message-enter {
+  animation: message-enter 240ms ease-out both;
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(11, 114, 107, 0.16);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(11, 114, 107, 0);
+  }
+}
+
+@keyframes message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
