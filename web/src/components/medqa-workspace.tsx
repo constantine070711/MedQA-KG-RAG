@@ -9,6 +9,7 @@ import {
   Copy,
   Database,
   FileText,
+  ImagePlus,
   Mic,
   MicOff,
   Network,
@@ -30,6 +31,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { EvidencePanel } from "@/components/evidence-panel";
+import { ImageOcrDialog } from "@/components/image-ocr-dialog";
 import { WorkflowStatus } from "@/components/workflow-status";
 import { useSpeechInput, useSpeechOutput } from "@/hooks/use-speech";
 import { API_BASE, streamChat } from "@/lib/api";
@@ -138,6 +140,7 @@ export function MedQAWorkspace() {
   const [mode, setMode] = useState<RetrievalMode>("mix");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -345,6 +348,7 @@ export function MedQAWorkspace() {
     setIsStreaming(false);
     setInput("");
     setDrawerOpen(false);
+    setImageDialogOpen(false);
     window.setTimeout(() => textareaRef.current?.focus(), 0);
   }
 
@@ -624,6 +628,16 @@ export function MedQAWorkspace() {
                 />
                 <button
                   type="button"
+                  onClick={() => setImageDialogOpen(true)}
+                  disabled={isStreaming}
+                  title="识别药盒或化验单图片"
+                  aria-label="识别药盒或化验单图片"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-lg text-[var(--ink-soft)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--ink)] disabled:opacity-35"
+                >
+                  <ImagePlus className="size-4" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
                   onClick={speechInput.toggle}
                   disabled={!speechInput.supported || isStreaming}
                   title={
@@ -707,6 +721,19 @@ export function MedQAWorkspace() {
             onClose={() => setDrawerOpen(false)}
           />
         </div>
+      ) : null}
+
+      {imageDialogOpen ? (
+        <ImageOcrDialog
+          onClose={() => setImageDialogOpen(false)}
+          onUseText={(text) => {
+            setInput(text);
+            window.setTimeout(() => textareaRef.current?.focus(), 0);
+          }}
+          onAskEntity={(entity) => {
+            void handleSubmit(`请介绍${entity}相关的医学知识。`);
+          }}
+        />
       ) : null}
     </div>
   );

@@ -99,6 +99,7 @@
 | 🧪 **评测体系** | 完整评测框架：`evaluation/` 模块 + 28 题固定评测集 + 回归测试（571 项） |
 | 🧰 **MCP / 工具调用** | LightRAG、Neo4j 实体/关系/路径查询封装为受控工具；stdio MCP Server + HTTP 工具网关 + 前端调用轨迹 |
 | 🔊 **语音多模态** | 浏览器中文语音输入 + 回答朗读；不支持 Web Speech API 时自动保留文本工作流 |
+| 🖼️ **图片文字识别** | 药盒/说明书/化验单图片在浏览器本地 OCR；识别文字可编辑，命中实体后可发起通用知识问题 |
 
 ---
 
@@ -117,6 +118,7 @@
 | API | **FastAPI + Server-Sent Events** |
 | Agent Tools | **MCP stdio server + HTTP tool gateway** |
 | Multimodal | **Web Speech API**（语音输入 / 朗读） |
+| Image OCR | **Tesseract.js**（`chi_sim+eng`，浏览器本地运行） |
 | 评测 | `evaluation/` 自研指标 + `unittest` 回归测试 |
 | 部署 | Docker Compose（Neo4j） |
 

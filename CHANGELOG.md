@@ -14,6 +14,7 @@ All notable changes to MedQA are documented here.
 - Controlled medical tool layer with HTTP execution and browser tool traces.
 - MCP stdio server exposing five read-only retrieval tools.
 - Browser-native Mandarin voice input and answer playback.
+- Browser-local Chinese/English OCR for drug boxes and report images.
 - Responsive desktop and mobile layouts with a dedicated evidence drawer.
 - v2 safe-generation mode that prevents unsolicited dosage details.
 
