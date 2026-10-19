@@ -1,9 +1,99 @@
 # ARCHITECTURE.md — 系统架构文档
 
-> 版本: v2.5 — 完整问答链路（安全检测 → 图谱检索 → 证据融合 → LLM 生成 → 可靠性决策）+ Streamlit Web UI + 多轮对话 Memory + 知识图谱可视化；
-> CBLUE 数据适配、Reranker 重排、日志监控为独立实验模块，不接入生产检索链路。
-> 日期: 2026-08-26
+> 版本: v3.0 — v2 竞赛应用层（Next.js + FastAPI SSE + MCP + 语音/OCR）+ 已冻结的 v1 检索/证据/安全核心；
+> CBLUE 数据适配、Reranker 重排、日志监控保持独立实验/旁路边界。
+> 日期: 2026-10-19
 > 底座: LightRAG 1.5.4
+
+---
+
+## 0. v2 竞赛应用架构
+
+v2 不重写医疗检索核心，而是将 v1 已有的安全、检索、证据融合和可靠性决策
+暴露给现代 Web 应用。
+
+```
+Next.js 16 + TypeScript evidence workspace
+  ├── conversation and streamed answer
+  ├── workflow state and tool trace
+  ├── evidence inspector and graph view
+  ├── Web Speech API voice input / playback
+  └── Tesseract.js local image OCR
+                  │
+                  │ SSE + HTTP JSON
+                  ▼
+FastAPI v2 gateway
+  ├── POST /api/chat/stream
+  ├── GET  /api/tools
+  ├── POST /api/tools/execute
+  └── GET  /api/health, /api/meta
+                  │
+                  ▼
+MedQAAgent LangGraph StateGraph
+  safety_check
+    -> neo4j_retrieve
+    -> build_prompt
+    -> generate
+    -> analyze
+    -> decide
+    -> finalize
+                  │
+        ┌─────────┼──────────┐
+        ▼         ▼          ▼
+    LightRAG    Neo4j      MedicalToolbox
+                         / MCP stdio server
+```
+
+### 0.1 Application Components
+
+| Layer | Component | Responsibility |
+|---|---|---|
+| Browser | `web/src/components/medqa-workspace.tsx` | Conversation, streaming, input controls, evidence drawer |
+| Browser | `web/src/components/evidence-panel.tsx` | Safety, reliability, tool trace, sources, citations, triples |
+| Browser | `web/src/hooks/use-speech.ts` | Mandarin speech recognition and answer playback |
+| Browser | `web/src/components/image-ocr-dialog.tsx` | Local OCR, editable text, supported-entity lookup |
+| API | `api/runtime.py` | LangGraph node updates to SSE events and answer chunks |
+| API | `api/toolbox.py` | Controlled HTTP tool execution |
+| MCP | `mcp_server/medqa_mcp.py` | Five read-only tools over stdio |
+| Core | `src/agent.py` | Inherited seven-node medical question workflow |
+| Core | `src/tools/medical_tools.py` | Whitelisted LightRAG/Neo4j tool implementation |
+
+### 0.2 SSE Event Contract
+
+```text
+status         safety / retrieval / fusion / generation / analysis / decision
+tool           tool name, status, summary, elapsed time
+answer_delta   streamed answer text
+final          complete Agent response envelope
+error          sanitized user-facing error
+```
+
+The server also emits SSE heartbeat comments while long generation is running.
+
+### 0.3 Tool and MCP Boundary
+
+- Tool names and argument names are whitelisted.
+- Limits, enums, and string lengths are validated before execution.
+- Cypher remains parameterized and read-only.
+- No tool accepts arbitrary Cypher or file paths.
+- The browser uses SSE traces for display; external agents can use the same
+  retrieval tools through MCP.
+
+### 0.4 Multimodal Boundary
+
+- Voice recognition and speech synthesis run in the browser.
+- OCR runs locally with Tesseract.js `chi_sim+eng`.
+- Source images are not sent to the FastAPI service.
+- OCR text is editable and does not automatically become medical evidence.
+- Supported disease/drug entities can generate general knowledge questions,
+  but no tool diagnoses an individual from an image.
+
+### 0.5 Version Boundary
+
+- `v1.0.0`: frozen Streamlit application and its verified retrieval core.
+- `v2`: Next.js/FastAPI application, tools, MCP, voice, and image OCR.
+- The historical sections below document the inherited v1 core and remain
+  authoritative for retrieval, safety, evidence fusion, and evaluation.
 
 ---
 
@@ -60,8 +150,8 @@
 │  │     │  [MVP]       │  │  [MVP]       │  │  [MVP]       │             │ │
 │  │     │  NetworkX    │  │  NanoVectorDB│  │  JSON        │             │ │
 │  │     │              │  │              │  │              │             │ │
-│  │     │  [Target]    │  │  [Target]    │  │  [Target]    │             │ │
-│  │     │  Neo4j       │  │  ChromaDB    │  │  JSON        │             │ │
+│  │     │  [Target]    │  │  [Long-term] │  │  [Target]    │             │ │
+│  │     │  Neo4j       │  │  NanoVectorDB│  │  JSON        │             │ │
 │  │     └──────────────┘  └──────────────┘  └──────────────┘             │ │
 │  └────────────────────────────────┬──────────────────────────────────────┘ │
 │                                   │                                         │
@@ -419,7 +509,7 @@ LightRAG.aquery("2型糖尿病有哪些常见症状?", mode=mix)
 
 2. 技术栈完美匹配
    ├── Neo4j 后端: ✅ (支持, 后续切换)
-   ├── ChromaDB 后端: ✅ (支持, 后续切换)
+   ├── 向量后端: NanoVectorDB (长期保留；不迁移 ChromaDB)
    ├── bge-m3 Embedding: ✅ (原生支持)
    ├── DeepSeek LLM: ✅ (OpenAI 兼容接口)
    └── Windows 兼容: ✅ (pip install 即可)
@@ -439,7 +529,7 @@ LightRAG.aquery("2型糖尿病有哪些常见症状?", mode=mix)
 5. MVP 适配
    ├── 默认文件存储 (零配置启动)
    ├── NetworkX + NanoVectorDB (无需额外安装数据库)
-   ├── 后续可平滑迁移到 Neo4j + ChromaDB
+   ├── 图迁移到 Neo4j；向量长期使用 NanoVectorDB
    └── pip install lightrag-hku 一行安装
 ```
 
@@ -521,7 +611,7 @@ MS GraphRAG 的社区检测和层次化摘要思路值得借鉴:
 
 ---
 
-## 6. 架构演进路线
+## 6. v1 架构演进路线
 
 ```
 Phase 1-3 (当前)               Phase 4-5                    Phase 7-8
@@ -530,7 +620,7 @@ Phase 1-3 (当前)               Phase 4-5                    Phase 7-8
 ┌──────────────┐         ┌──────────────┐           ┌──────────────┐
 │  LightRAG    │         │  LightRAG    │           │  LightRAG    │
 │  + NetworkX  │   →     │  + Neo4j     │    →      │  + Neo4j     │
-│  + NanoVDB   │         │  + ChromaDB  │           │  + ChromaDB  │
+│  + NanoVDB   │         │  + NanoVDB   │           │  + NanoVDB   │
 │  + src/*.py  │         │  + src/*.py  │           │  + LangGraph │
 │  + metadata  │         │  + metadata  │           │  + Streamlit │
 └──────────────┘         └──────────────┘           └──────────────┘
@@ -545,6 +635,7 @@ Phase 1-3 (当前)               Phase 4-5                    Phase 7-8
 | Phase 7 | Neo4j | NanoVectorDB | ✅ Pipeline | ✅ LangGraph | ❌ | + Agent 工作流 (src/agent.py) |
 | Phase 8 | Neo4j | NanoVectorDB | ✅ Pipeline | ✅ LangGraph | ✅ Streamlit | + Web UI (app/) + KG 可视化 |
 | Phase 9 | Neo4j | NanoVectorDB | ✅ Pipeline | ✅ LangGraph | ✅ Streamlit | + 多轮对话 Memory + KG 可视化增强（内联 vis.js、确定性布局居中）+ UI 打磨（「参考前文」提示/首轮加载/关于本系统） |
+| Phase 10 / v2 | Neo4j | NanoVectorDB | ✅ Pipeline | ✅ LangGraph | ✅ Next.js + FastAPI | + SSE + MCP/工具轨迹 + 语音 + 本地 OCR + CI |
 
 ---
 
@@ -553,11 +644,11 @@ Phase 1-3 (当前)               Phase 4-5                    Phase 7-8
 | 决策 | 说明 |
 |------|------|
 | **底座选型** | LightRAG — 检索内核最成熟、增量更新、资源友好 |
-| **存储渐进式** | MVP 用默认文件存储 → 生产切换到 Neo4j + ChromaDB |
+| **存储渐进式** | 图存储迁移到 Neo4j；向量长期保留 NanoVectorDB（ChromaDB 路线已放弃） |
 | **LLM 云端优先** | DeepSeek API (v4-flash) — 不占本地资源、中文好、便宜 |
 | **Embedding 本地优先** | bge-small-zh-v1.5 — 94MB、512d、CPU可运行 |
 | **Agent 自建** | LangGraph — 任何框架都缺Agent，统一自建方案 |
-| **UI 自建** | Streamlit — 纯Python、轻量、快速迭代 |
+| **UI 自建** | v1 Streamlit 保留；v2 使用 Next.js + TypeScript + FastAPI SSE |
 | **数据格式标准化** | Markdown + YAML frontmatter — 人机可读、元数据可追溯 |
 | **Neo4j 离线导出** | 先 Cypher 后连接 — 降低环境复杂度 |
 | **先跑通再优化** | 每阶段产出可运行代码，不过度工程化 |
@@ -592,3 +683,4 @@ Phase 1-3 (当前)               Phase 4-5                    Phase 7-8
 | 2026-08-25 | v2.3 — CBLUE 独立数据适配管道（src/data_adapter，三层隔离，Entity Linking 候选；不集成生产链路） |
 | 2026-08-25 | v2.4 — Reranker 实验评估（src/retrieval/rerank.py，实验阶段未接入生产）+ 日志监控模块（request_id + JSONL + metrics 白名单 + 脱敏） |
 | 2026-08-26 | v2.5 — 日志轮转（src/monitoring.py `_rotate_if_needed`，5MB/3 备份，失败静默）+ UI 多轮 + Memory 日志补验 |
+| 2026-10-19 | v3.0 — v2 竞赛应用：Next.js 16 证据工作台 + FastAPI SSE + MCP 工具/轨迹 + 语音 + 本地 OCR + CI |
