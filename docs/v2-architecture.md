@@ -14,6 +14,8 @@ Next.js evidence workspace (web/)
         v
 FastAPI v2 gateway (api/)
         |
+        +-- Controlled tool gateway (/api/tools)
+        |
         v
 MedQAAgent LangGraph workflow (src/agent.py)
         |
@@ -22,6 +24,9 @@ MedQAAgent LangGraph workflow (src/agent.py)
         +-- LightRAG
         +-- Evidence Fusion
         +-- ReliabilityDecision
+
+External MCP clients use the same MedicalToolbox through
+`mcp_server/medqa_mcp.py`.
 ```
 
 ## API
@@ -66,6 +71,15 @@ The endpoint emits Server-Sent Events with one of these payloads:
 Heartbeat comments are emitted during long-running generation so reverse
 proxies do not close an otherwise healthy stream.
 
+### `GET /api/tools`
+
+Returns the whitelisted tool schemas.
+
+### `POST /api/tools/execute`
+
+Runs one controlled retrieval tool. Tool names, argument names, limits, and
+enums are validated before dispatch.
+
 ## Browser Application
 
 The workspace has three functional regions:
@@ -73,7 +87,7 @@ The workspace has three functional regions:
 - Conversation: questions, streamed answers, medical disclaimer, cancellation.
 - Workflow status: safety, retrieval, fusion, generation, and verification.
 - Evidence inspector: safety decision, reliability, source coverage, evidence
-  cards, graph triples, citations, and retrieval counts.
+  cards, graph triples, citations, retrieval counts, and tool traces.
 
 The evidence inspector consumes only the final response returned by the existing
 agent. It does not infer citations, fabricate graph relationships, or execute a

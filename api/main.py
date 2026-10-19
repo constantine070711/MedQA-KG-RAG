@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import os
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from api.runtime import AgentRuntime
-from api.schemas import ChatRequest
+from api.schemas import ChatRequest, ToolCallRequest
+from api.toolbox import get_toolbox
+from src.tools.medical_tools import TOOL_DEFINITIONS, ToolExecutionError
 
 
 API_VERSION = "2.0.0-dev"
@@ -66,11 +68,36 @@ async def meta() -> dict:
     return {
         "version": API_VERSION,
         "examples": EXAMPLES,
+        "tool_count": len(TOOL_DEFINITIONS),
         "disclaimer": (
             "本系统仅提供医疗知识辅助，不替代医生诊断、处方或专业医疗意见。"
             "如存在紧急情况，请及时寻求专业医疗帮助（紧急情况请拨打 120）。"
         ),
     }
+
+
+@app.get("/api/tools")
+async def tools() -> dict:
+    return {
+        "version": API_VERSION,
+        "tools": TOOL_DEFINITIONS,
+    }
+
+
+@app.post("/api/tools/execute")
+async def execute_tool(
+    request: ToolCallRequest,
+    toolbox=Depends(get_toolbox),
+) -> dict:
+    try:
+        return await toolbox.call_tool(request.tool, request.arguments)
+    except ToolExecutionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"tool service unavailable: {type(exc).__name__}",
+        ) from exc
 
 
 @app.post("/api/chat/stream")

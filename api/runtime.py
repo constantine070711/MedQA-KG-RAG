@@ -89,6 +89,83 @@ def _stage_event(node: str, update: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _tool_events_for_node(
+    node: str,
+    update: dict[str, Any],
+    elapsed_ms: float,
+) -> list[dict[str, Any]]:
+    """Describe the data tools that participated in a LangGraph node."""
+
+    if node == "safety_check":
+        level = str(update.get("safety_level") or "unknown")
+        return [
+            {
+                "type": "tool",
+                "tool": "safety.classify",
+                "label": "安全分级",
+                "status": "blocked" if level == "blocked" else "completed",
+                "summary": f"安全等级：{level}",
+                "elapsed_ms": round(elapsed_ms, 1),
+            }
+        ]
+
+    if node == "neo4j_retrieve":
+        unavailable = bool(update.get("neo4j_unavailable"))
+        mentions = update.get("mentions") or []
+        if unavailable:
+            summary = "Neo4j 不可用，已降级"
+        elif mentions:
+            summary = f"命中 {len(mentions)} 个实体：{'、'.join(str(m) for m in mentions[:3])}"
+        else:
+            summary = "未命中结构化实体"
+        return [
+            {
+                "type": "tool",
+                "tool": "neo4j.graph_search",
+                "label": "Neo4j 图谱检索",
+                "status": "unavailable" if unavailable else "completed",
+                "summary": summary,
+                "elapsed_ms": round(elapsed_ms, 1),
+            }
+        ]
+
+    if node == "generate":
+        evidence = update.get("lightrag_evidence") or {}
+        entities = evidence.get("entities") or []
+        relationships = evidence.get("relationships") or []
+        chunks = evidence.get("chunks") or []
+        return [
+            {
+                "type": "tool",
+                "tool": "lightrag.hybrid_retrieval",
+                "label": "LightRAG 混合检索",
+                "status": "completed",
+                "summary": (
+                    f"实体 {len(entities)} · 关系 {len(relationships)} · "
+                    f"文档片段 {len(chunks)}"
+                ),
+                "elapsed_ms": round(elapsed_ms, 1),
+            }
+        ]
+
+    if node == "decide":
+        decision = update.get("reliability_decision") or {}
+        value = str(decision.get("decision") or "unknown")
+        reason = str(decision.get("reason_code") or "")
+        return [
+            {
+                "type": "tool",
+                "tool": "reliability.gate",
+                "label": "可靠性决策",
+                "status": "completed",
+                "summary": f"{value}{f' · {reason}' if reason else ''}",
+                "elapsed_ms": round(elapsed_ms, 1),
+            }
+        ]
+
+    return []
+
+
 class AgentRuntime:
     """Serialize access to LightRAG and stream LangGraph node updates."""
 
@@ -142,6 +219,11 @@ class AgentRuntime:
                         node_update = {}
 
                     yield sse_event(_stage_event(node, node_update))
+                    elapsed_ms = (time.perf_counter() - started) * 1000.0
+                    for tool_event in _tool_events_for_node(
+                        node, node_update, elapsed_ms
+                    ):
+                        yield sse_event(tool_event)
 
                     if node == "finalize":
                         candidate = node_update.get("final_response")

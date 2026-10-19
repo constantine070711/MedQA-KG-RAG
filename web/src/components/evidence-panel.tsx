@@ -10,6 +10,7 @@ import {
   Network,
   Quote,
   ShieldCheck,
+  Wrench,
   X,
 } from "lucide-react";
 
@@ -26,12 +27,13 @@ import {
   safetyMeta,
   sourceLabels,
 } from "@/lib/format";
-import type { AgentResponse } from "@/lib/types";
+import type { AgentResponse, ToolTrace } from "@/lib/types";
 
 type EvidenceTab = "evidence" | "graph" | "citations";
 
 interface EvidencePanelProps {
   response?: AgentResponse;
+  tools?: ToolTrace[];
   drawer?: boolean;
   onClose?: () => void;
 }
@@ -54,6 +56,7 @@ function EmptyEvidence() {
 
 export function EvidencePanel({
   response,
+  tools = [],
   drawer = false,
   onClose,
 }: EvidencePanelProps) {
@@ -87,7 +90,7 @@ export function EvidencePanel({
           <div>
             <p className="text-sm font-semibold">证据检查器</p>
             <p className="text-[11px] text-[var(--ink-faint)]">
-              安全、可靠性、来源与图谱
+              安全、工具、来源与图谱
             </p>
           </div>
         </div>
@@ -180,6 +183,51 @@ export function EvidencePanel({
                 </span>
               )}
             </div>
+
+            {tools.length > 0 ? (
+              <div className="mt-3 rounded-lg border border-[var(--line)] bg-[var(--surface-raised)] p-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--ink-soft)]">
+                    <Wrench className="size-3 text-[var(--primary)]" aria-hidden="true" />
+                    工具调用
+                  </div>
+                  <span className="text-[10px] text-[var(--ink-faint)]">
+                    {tools.length} 步
+                  </span>
+                </div>
+                <div className="mt-2 space-y-1.5">
+                  {tools.map((tool, index) => (
+                    <div
+                      key={`${tool.tool}-${index}`}
+                      className="flex items-start gap-2 text-[10px] leading-4"
+                    >
+                      <span
+                        className={`mt-1 size-1.5 shrink-0 rounded-full ${
+                          tool.status === "unavailable" ||
+                          tool.status === "blocked"
+                            ? "bg-[var(--caution)]"
+                            : "bg-[var(--evidence)]"
+                        }`}
+                        aria-hidden="true"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate font-medium text-[var(--ink)]">
+                            {tool.label}
+                          </span>
+                          {typeof tool.elapsed_ms === "number" ? (
+                            <span className="shrink-0 text-[var(--ink-faint)]">
+                              {Math.round(tool.elapsed_ms)} ms
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="text-[var(--ink-soft)]">{tool.summary}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div className="sticky top-0 z-10 border-b border-[var(--line)] bg-[var(--surface)] px-3 py-2">

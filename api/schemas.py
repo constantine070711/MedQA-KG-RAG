@@ -31,3 +31,10 @@ class ChatRequest(BaseModel):
         if not cleaned:
             raise ValueError("question must not be blank")
         return cleaned
+
+
+class ToolCallRequest(BaseModel):
+    """A controlled tool invocation over the v2 HTTP gateway."""
+
+    tool: str = Field(min_length=1, max_length=80)
+    arguments: dict = Field(default_factory=dict)
