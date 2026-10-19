@@ -6,6 +6,8 @@ All notable changes to MedQA are documented here.
 
 ### Added
 
+- Competition material index, authentic development timeline, scoring matrix,
+  demo script, report outline, and submission checklist.
 - Next.js 16 + TypeScript evidence workspace in `web/`.
 - FastAPI v2 service in `api/` with SSE workflow events.
 - Streaming answer events, workflow-stage status, and cancellation.
