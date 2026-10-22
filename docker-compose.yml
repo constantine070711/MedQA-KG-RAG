@@ -45,6 +45,36 @@ services:
       neo4j:
         condition: service_healthy
 
+  neo4j-init:
+    profiles:
+      - init
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: medqa-neo4j-init
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      NEO4J_URI: bolt://neo4j:7687
+    volumes:
+      - ./models:/app/models:ro
+      - ./lightrag_cache:/app/lightrag_cache
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -c
+    command:
+      - |
+        set -eu
+        python scripts/neo4j_bootstrap.py
+        python scripts/index_docs.py --clear
+        python scripts/import_graphml_to_neo4j.py
+        python scripts/import_curated_to_neo4j.py
+        python scripts/rebuild_curated_relations.py
+
   web:
     build:
       context: ./web
