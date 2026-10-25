@@ -2,7 +2,7 @@
 
 All notable changes to MedQA are documented here.
 
-## [Unreleased] - v2.0.0-dev
+## [2.0.0] - 2026-10-25
 
 ### Added
 

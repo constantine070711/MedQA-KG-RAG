@@ -17,7 +17,6 @@ import {
   Plus,
   Search,
   Send,
-  ShieldCheck,
   Square,
   Stethoscope,
   Trash2,
@@ -475,12 +474,8 @@ export function MedQAWorkspace() {
                 <div className="flex items-center justify-between text-[10px] text-[var(--ink-faint)]">
                   <span>当前版本</span>
                   <span className="font-semibold text-[var(--primary)]">
-                    v2.0 dev
+                    v2.0.0
                   </span>
-                </div>
-                <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[var(--ink-faint)]">
-                  <ShieldCheck className="size-3" aria-hidden="true" />
-                  v1.0.0 已保留
                 </div>
               </div>
             </div>

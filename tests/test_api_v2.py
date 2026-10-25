@@ -155,7 +155,7 @@ class TestApi(unittest.TestCase):
             with TestClient(app) as client:
                 health = client.get("/api/health")
                 self.assertEqual(health.status_code, 200)
-                self.assertEqual(health.json()["version"], "2.0.0-dev")
+                self.assertEqual(health.json()["version"], "2.0.0")
 
                 response = client.post(
                     "/api/chat/stream",

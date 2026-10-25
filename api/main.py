@@ -14,7 +14,7 @@ from api.toolbox import get_toolbox
 from src.tools.medical_tools import TOOL_DEFINITIONS, ToolExecutionError
 
 
-API_VERSION = "2.0.0-dev"
+API_VERSION = "2.0.0"
 EXAMPLES = [
     "2型糖尿病的常见症状有哪些？",
     "二甲双胍用于治疗什么疾病？",
