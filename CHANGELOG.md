@@ -10,6 +10,9 @@ All notable changes to MedQA are documented here.
   demo script, report outline, and submission checklist.
 - Public documentation index and synchronized v2 architecture, capabilities,
   testing counts, limitations, and future-work sections.
+- Production API and standalone Next.js container images, three-service Compose
+  orchestration, one-time Neo4j/LightRAG initializer, health checks, and
+  deployment documentation.
 - Next.js 16 + TypeScript evidence workspace in `web/`.
 - FastAPI v2 service in `api/` with SSE workflow events.
 - Streaming answer events, workflow-stage status, and cancellation.

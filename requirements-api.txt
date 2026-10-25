@@ -1,0 +1,10 @@
+# Minimal runtime dependency set for the containerized MedQA API.
+lightrag-hku==1.5.4
+openai>=2.0
+python-dotenv>=1.0
+sentence-transformers>=5.0
+neo4j>=6.0
+langgraph>=1.0
+fastapi>=0.147
+uvicorn[standard]>=0.30
+mcp>=1.28,<2

@@ -445,6 +445,25 @@ python scripts/import_curated_to_neo4j.py  # 导入 curated 临床层
 
 ## 16. 启动
 
+### Docker Compose（推荐用于比赛评审）
+
+```powershell
+# 首次初始化 Neo4j + LightRAG 索引
+docker compose --profile init run --rm neo4j-init
+
+# 启动 API 和 Web
+docker compose up -d --build api web
+
+# 访问
+# Web: http://localhost:3000
+# API: http://localhost:8000/api/health
+```
+
+完整的环境变量、首轮索引、公网部署和故障排查见
+[docs/deployment.md](docs/deployment.md)。
+
+### 本地开发
+
 ```bash
 # v2 API（终端 1）
 uvicorn api.main:app --reload --port 8000
