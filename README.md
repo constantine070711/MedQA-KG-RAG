@@ -56,10 +56,14 @@
 
 > ⚠️ 本项目定位为 **医疗知识辅助** 的工程系统与科研实验基础，**不替代医生诊断**。仅供学习、研究与演示使用。
 
-### 版本说明
+### 版本选择
 
-- **v2（当前开发线）**：Next.js + TypeScript 证据工作台，FastAPI SSE 流式接口，保留现有 LangGraph / RAG / Neo4j 核心。
-- **v1.0.0（已保留）**：原始 Streamlit 版本，可通过 Git tag `v1.0.0` 查看。
+| 版本 | 分支 | 技术栈 | 说明 |
+|---|---|---|---|
+| **v2（当前版本）** | [v2](https://github.com/constantine070711/MedQA-KG-RAG/tree/v2) | Next.js + TypeScript + FastAPI SSE | 证据工作台、工具轨迹、语音和图片 OCR |
+| **v1（历史版本）** | [v1](https://github.com/constantine070711/MedQA-KG-RAG/tree/v1) | Python + Streamlit | 原始知识图谱与 RAG 问答界面 |
+
+`v1.0.0` 标签保留 v1 的不可变归档；`main` 与 `v2` 当前保持同步，打开仓库默认查看 v2 内容。也可以通过 GitHub 页面左上角的分支选择器切换代码版本。
 
 ### 项目文档
 
