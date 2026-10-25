@@ -108,7 +108,7 @@
 | 🖥️ **Web UI** | v2：Next.js 证据工作台 + SSE 流式回答；v1：Streamlit + pyvis |
 | 🧪 **评测体系** | 完整评测框架：28 题固定评测集 + `tests/` 495 项 + `evaluation/` 97 项；Neo4j 未启动时 24 项集成测试跳过 |
 | 🧰 **MCP / 工具调用** | LightRAG、Neo4j 实体/关系/路径查询封装为受控工具；stdio MCP Server + HTTP 工具网关 + 前端调用轨迹 |
-| 🔊 **语音多模态** | 浏览器中文语音输入 + 回答朗读；不支持 Web Speech API 时自动保留文本工作流 |
+| 🔊 **语音多模态** | 浏览器中文语音输入 + 回答朗读；可选择系统中文声音、自动推荐自然语音并记住选择 |
 | 🖼️ **图片文字识别** | 药盒/说明书/化验单图片在浏览器本地 OCR；识别文字可编辑，命中实体后可发起通用知识问题 |
 
 ---
@@ -127,10 +127,10 @@
 | Web UI | **Next.js 16 + TypeScript**（v2）· Streamlit + pyvis（v1） |
 | API | **FastAPI + Server-Sent Events** |
 | Agent Tools | **MCP stdio server + HTTP tool gateway** |
-| Multimodal | **Web Speech API**（语音输入 / 朗读） |
+| Multimodal | **Web Speech API**（语音输入 / 可切换朗读声音） |
 | Image OCR | **Tesseract.js**（`chi_sim+eng`，浏览器本地运行） |
 | 评测 | `evaluation/` 自研指标 + `unittest` 回归测试 |
-| 部署 | Docker Compose（当前仅 Neo4j；v2 三服务一键部署待补充） |
+| 部署 | Docker Compose（Neo4j + FastAPI + Next.js） |
 
 ---
 
@@ -460,7 +460,9 @@ docker compose up -d --build api web
 ```
 
 完整的环境变量、首轮索引、公网部署和故障排查见
-[docs/deployment.md](docs/deployment.md)。
+[docs/deployment.md](docs/deployment.md)。Windows 运行时 Socket 与 Docker
+数据盘排障见
+[docs/windows-docker-troubleshooting.md](docs/windows-docker-troubleshooting.md)。
 
 ### 本地开发
 
@@ -570,7 +572,7 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 - **实验知识库不接入生产**：大规模扩展 KB 未带来固定评测集增益，保持隔离；
 - **LLM 输出非确定性**：同类问题的生成结果可能存在细微差异；
 - **Neo4j 为可选组件**：未配置时无结构化图谱证据。
-- **浏览器多模态能力依赖浏览器实现**：语音识别在 Chrome / Edge 支持较好；首次图片 OCR 需要下载中文模型；
+- **浏览器多模态能力依赖浏览器实现**：语音识别和朗读声音列表由浏览器/系统提供，Chrome、Edge 的可用声音可能不同；首次图片 OCR 需要下载中文模型；
 - **图片 OCR 仅用于文字识别和实体定位**：不自动解释个人检查结果，不构成图片诊断；
 - **在线演示尚未部署**：当前提供本地启动方式和截图，公网地址待部署阶段补充。
 

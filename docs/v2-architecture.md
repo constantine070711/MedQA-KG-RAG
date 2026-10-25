@@ -29,8 +29,10 @@ External MCP clients use the same MedicalToolbox through
 `mcp_server/medqa_mcp.py`.
 
 Voice input, answer playback, and image OCR run in the browser. Voice uses the
-Web Speech API; OCR uses Tesseract.js with `chi_sim+eng`. Images are not sent to
-the API unless the user explicitly places recognized text into a chat request.
+Web Speech API, including browser-provided Chinese voice discovery, persisted
+voice selection, and quality-aware automatic ranking. OCR uses Tesseract.js with
+`chi_sim+eng`. Images are not sent to the API unless the user explicitly places
+recognized text into a chat request.
 ```
 
 ## API
@@ -86,7 +88,8 @@ enums are validated before dispatch.
 
 ### Browser-local capabilities
 
-- `use-speech.ts`: Mandarin recognition and answer playback.
+- `use-speech.ts`: Mandarin recognition, Chinese voice discovery, persisted
+  voice selection, and answer playback.
 - `image-ocr-dialog.tsx`: local OCR, editable text, and supported-entity lookup.
 - The OCR dialog uses the public `list_supported_entities` tool only for
   vocabulary matching; it does not send the source image.

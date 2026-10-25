@@ -20,9 +20,11 @@ All notable changes to MedQA are documented here.
   and Neo4j triples.
 - Controlled medical tool layer with HTTP execution and browser tool traces.
 - MCP stdio server exposing five read-only retrieval tools.
-- Browser-native Mandarin voice input and answer playback.
+- Browser-native Mandarin voice input and answer playback with selectable
+  Chinese voices, quality-aware automatic ranking, and persisted preferences.
 - Browser-local Chinese/English OCR for drug boxes and report images.
 - Responsive desktop and mobile layouts with a dedicated evidence drawer.
+- Current 1920x1080 v2 workspace and evidence screenshots in the README.
 - v2 safe-generation mode that prevents unsolicited dosage details.
 
 ### Changed

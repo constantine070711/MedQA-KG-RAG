@@ -139,6 +139,16 @@ Start Docker Desktop and confirm:
 docker info
 ```
 
+### Docker Desktop fails while creating a runtime socket on Windows
+
+Errors mentioning `Docker\run\sailor-ingest.sock`,
+`docker-secrets-engine\engine.sock`, or inaccessible reparse points are runtime
+socket failures. They do not mean the container data disk is corrupted.
+
+Follow [Windows Docker troubleshooting](windows-docker-troubleshooting.md).
+Do not choose **Reset to factory defaults** as the first step because it deletes
+containers, images, and volumes.
+
 ### Windows port reservation
 
 Inspect reserved ranges:
@@ -160,6 +170,11 @@ docker compose exec neo4j cypher-shell -u neo4j -p $env:NEO4J_PASSWORD "MATCH (n
 
 The API intentionally degrades to LightRAG when Neo4j is unavailable and will
 report that state rather than fabricating graph evidence.
+
+After Docker or its data disk is restarted, restart the FastAPI process before
+testing graph retrieval. Existing Neo4j driver connections may have been
+invalidated and can log `ConnectionAbortedError(10053)` until the API process is
+recreated.
 
 ### First query is slow
 

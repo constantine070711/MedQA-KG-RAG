@@ -16,16 +16,29 @@ server-side audio dependency.
 ## Answer Playback
 
 - Uses `speechSynthesis` and `SpeechSynthesisUtterance`.
-- Prefers an installed Chinese voice, with Mandarin as the fallback language.
+- Discovers Chinese voices exposed by the current browser and operating system.
+- Offers an explicit voice selector in every completed answer.
+- Ranks natural, neural, online, Xiaoxiao, and Yunxi voices ahead of legacy
+  desktop voices when `Auto (recommended)` is selected.
+- Persists the user's voice choice in browser `localStorage`.
 - Markdown markers are removed before playback.
 - Playback can be stopped from the same control.
+
+The available list depends on the browser and installed system voices. Chrome
+and Edge may expose different sets of legacy and natural voices on the same
+machine. MedQA does not download or bundle third-party speech models.
 
 ## Privacy
 
 Browser speech recognition may use a browser vendor's online recognition
 service. The implementation does not send audio to the MedQA FastAPI service.
 Users should avoid speaking personal medical identifiers or other sensitive
-information. Answer playback happens locally in the browser.
+information.
+
+Playback is initiated in the browser. Installed local voices synthesize speech
+on-device, while voices marked `online` may send the answer text to the browser
+vendor's speech service. Do not read answers containing personal medical data
+with an online voice when that transfer is not acceptable.
 
 ## Browser Support
 
