@@ -14,6 +14,7 @@
 - [MCP tools](v2-mcp-tools.md)
 - [Voice interaction](v2-voice.md)
 - [Image OCR](v2-report-ocr.md)
+- [Deployment](deployment.md)
 
 ## Competition
 
