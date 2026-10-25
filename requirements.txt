@@ -30,6 +30,11 @@ neo4j>=6.0
 # --- Agent 工作流 ---
 langgraph>=1.0
 
+# --- v2 Web API ---
+fastapi>=0.115
+uvicorn[standard]>=0.30
+mcp>=1.28,<2
+
 # --- Web UI 与知识图谱可视化 ---
 streamlit>=1.60
 pyvis>=0.3

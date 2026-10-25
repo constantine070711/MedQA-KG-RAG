@@ -1,0 +1,7 @@
+# Minimal dependency set for the v2 API contract tests.
+fastapi>=0.147
+httpx>=0.28
+pydantic>=2.13
+python-dotenv>=1.0
+mcp>=1.28,<2
+PyYAML>=6.0

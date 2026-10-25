@@ -281,6 +281,17 @@ class TestNeo4j(unittest.TestCase):
         self.assertFalse(state["fused_context"]["coverage"]["neo4j_has_evidence"])
 
 
+class TestV2GenerationPolicy(unittest.TestCase):
+    def test_v2_uses_safe_prompt_for_safe_queries(self):
+        agent = make_agent(
+            retriever=FakeRetriever(mode="empty"),
+            enforce_safe_generation_prompt=True,
+        )
+        state = run_state(agent, "今天天气怎么样")
+        self.assertEqual(state["system_prompt"], SYSTEM_PROMPT_SAFE)
+        self.assertIn("不得主动提供具体药物剂量", state["system_prompt"])
+
+
 # ============================================================
 # 9. evidence fusion 被调用
 # ============================================================

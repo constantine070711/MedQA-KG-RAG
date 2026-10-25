@@ -6,7 +6,9 @@
 
 面向医疗知识问答场景，将 **Knowledge Graph** 与 **RAG** 融合，内置安全控制、证据融合与来源引用机制的智能问答系统。
 
-![Python](https://img.shields.io/badge/Python-3.11-blue) ![LightRAG](https://img.shields.io/badge/LightRAG-1.5.4-green) ![LangGraph](https://img.shields.io/badge/LangGraph-Agent-purple) ![Neo4j](https://img.shields.io/badge/Neo4j-Graph-blue) ![Streamlit](https://img.shields.io/badge/Streamlit-Web%20UI-red) ![DeepSeek](https://img.shields.io/badge/LLM-DeepSeek-blueviolet)
+![Python](https://img.shields.io/badge/Python-3.11-blue) ![Next.js](https://img.shields.io/badge/Next.js-16-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-SSE-009688) ![MCP](https://img.shields.io/badge/MCP-Tools-6f42c1) ![LightRAG](https://img.shields.io/badge/LightRAG-1.5.4-green) ![LangGraph](https://img.shields.io/badge/LangGraph-Agent-purple) ![Neo4j](https://img.shields.io/badge/Neo4j-Graph-blue)
+
+[![MedQA v2 CI](https://github.com/constantine070711/MedQA-KG-RAG/actions/workflows/v2-ci.yml/badge.svg?branch=v2)](https://github.com/constantine070711/MedQA-KG-RAG/actions/workflows/v2-ci.yml)
 
 </div>
 
@@ -54,6 +56,20 @@
 
 > ⚠️ 本项目定位为 **医疗知识辅助** 的工程系统与科研实验基础，**不替代医生诊断**。仅供学习、研究与演示使用。
 
+### 版本说明
+
+- **v2（当前开发线）**：Next.js + TypeScript 证据工作台，FastAPI SSE 流式接口，保留现有 LangGraph / RAG / Neo4j 核心。
+- **v1.0.0（已保留）**：原始 Streamlit 版本，可通过 Git tag `v1.0.0` 查看。
+
+### 赛事材料
+
+- [公开文档索引](docs/README.md)
+- [真实开发时间线](docs/development-history.md)
+- [评分项证据矩阵](docs/competition/scoring-matrix.md)
+- [5-8 分钟演示脚本](docs/competition/demo-script.md)
+- [技术文档目录](docs/competition/technical-report-outline.md)
+- [提交检查清单](docs/competition/submission-checklist.md)
+
 ---
 
 ## 2. 项目背景
@@ -73,6 +89,7 @@
 - **Phase 8**：Streamlit Web UI + 知识图谱可视化；
 - **Phase 9**：多轮对话 Memory；
 - **Phase 10**：结构化医学知识库扩展实验（独立 Experiment KB，与生产环境隔离）、Reranker 实验评估、日志与监控旁路。
+- **v2 Competition Edition**：Next.js 证据工作台、FastAPI SSE、MCP 工具、语音输入/朗读、本地图片 OCR 和 GitHub Actions。
 
 ---
 
@@ -88,8 +105,11 @@
 | 📚 **来源引用** | Citation Extractor / Verifier，计算引用可追溯比例（grounded ratio） |
 | 💬 **多轮对话** | 有限窗口 Memory（最近 3 轮 / 600 字符），仅作生成背景，不污染证据 |
 | 📊 **可观测性** | request_id + JSONL 结构化日志 + 敏感信息脱敏 + 日志轮转 |
-| 🖥️ **Web UI** | Streamlit 对话式界面 + 知识图谱可视化（pyvis / vis.js 内联，无 CDN 依赖） |
-| 🧪 **评测体系** | 完整评测框架：`evaluation/` 模块 + 28 题固定评测集 + 回归测试（571 项） |
+| 🖥️ **Web UI** | v2：Next.js 证据工作台 + SSE 流式回答；v1：Streamlit + pyvis |
+| 🧪 **评测体系** | 完整评测框架：28 题固定评测集 + `tests/` 495 项 + `evaluation/` 97 项；Neo4j 未启动时 24 项集成测试跳过 |
+| 🧰 **MCP / 工具调用** | LightRAG、Neo4j 实体/关系/路径查询封装为受控工具；stdio MCP Server + HTTP 工具网关 + 前端调用轨迹 |
+| 🔊 **语音多模态** | 浏览器中文语音输入 + 回答朗读；不支持 Web Speech API 时自动保留文本工作流 |
+| 🖼️ **图片文字识别** | 药盒/说明书/化验单图片在浏览器本地 OCR；识别文字可编辑，命中实体后可发起通用知识问题 |
 
 ---
 
@@ -104,32 +124,47 @@
 | LLM | **DeepSeek API**（OpenAI 兼容接口） |
 | Embedding | **bge-small-zh-v1.5**（默认，512 维，本地加载）· bge-m3（本地可用，可切换） |
 | Reranker | bge-reranker-base（实验评估阶段） |
-| Web UI | **Streamlit** + **pyvis**（KG 可视化） |
+| Web UI | **Next.js 16 + TypeScript**（v2）· Streamlit + pyvis（v1） |
+| API | **FastAPI + Server-Sent Events** |
+| Agent Tools | **MCP stdio server + HTTP tool gateway** |
+| Multimodal | **Web Speech API**（语音输入 / 朗读） |
+| Image OCR | **Tesseract.js**（`chi_sim+eng`，浏览器本地运行） |
 | 评测 | `evaluation/` 自研指标 + `unittest` 回归测试 |
-| 部署 | Docker Compose（Neo4j） |
+| 部署 | Docker Compose（当前仅 Neo4j；v2 三服务一键部署待补充） |
 
 ---
 
-## 5. 系统架构
+## 5. 系统架构（v2）
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│                          Web UI Layer (Streamlit)                        │
-│               对话界面 · 证据来源展示 · 知识图谱可视化 · 安全提示          │
-└──────────────────────────────────────────────┬───────────────────────────┘
-                                               │
-┌──────────────────────────────────────────────┼───────────────────────────┐
-│                        Agent Layer (LangGraph StateGraph)                │
-│  safety_check → neo4j_retrieve → build_prompt → generate → analyze       │
-│               → decide → finalize（条件边：BLOCKED 直达 decide）           │
-└──────────────────────────────────────────────┬───────────────────────────┘
-                                               │
-┌──────────────┬───────────────────────────────┼──────────────┬────────────┐
-│  Retrieval   │  LightRAG 混合检索              │  Neo4j 图谱   │  证据融合    │
-│  & RAG       │  向量块 / 实体 / 关系 / chunk   │  结构化三元组 │  Evidence   │
-│              │  (mix/hybrid/local/global/naive)│  (只读 Cypher)│  Fusion     │
-└──────────────┴───────────────────────────────┴──────────────┴────────────┘
+│                  Evidence Workspace (Next.js 16 / TS)                    │
+│      对话 · 流式回答 · 安全/可靠性 · 证据检查器 · 工具轨迹 · 语音/OCR      │
+└──────────────────────────────────┬───────────────────────────────────────┘
+                                   │ SSE
+┌──────────────────────────────────▼───────────────────────────────────────┐
+│                         FastAPI v2 Gateway                               │
+│             /api/chat/stream · /api/tools · tools/execute                │
+└──────────────────────────────────┬───────────────────────────────────────┘
+                                   │
+┌──────────────────────────────────▼───────────────────────────────────────┐
+│                    MedQAAgent (LangGraph StateGraph)                     │
+│ safety_check → neo4j_retrieve → build_prompt → generate → analyze        │
+│              → decide → finalize（BLOCKED 直接进入 decide）               │
+└──────────────┬───────────────────┬───────────────────┬──────────────────┘
+               │                   │                   │
+       ┌───────▼────────┐  ┌───────▼────────┐  ┌───────▼────────┐
+       │ LightRAG       │  │ Neo4j          │  │ MCP / Toolbox  │
+       │ 向量 + 图检索   │  │ 结构化三元组    │  │ 只读检索工具    │
+       └───────┬────────┘  └───────┬────────┘  └───────┬────────┘
+               └───────────────────┼───────────────────┘
+                         ┌─────────▼─────────┐
+                         │ Evidence Fusion   │
+                         │ Reliability Gate  │
+                         └───────────────────┘
 ```
+
+> 本文件后续章节继续描述从 v1 继承的检索、证据融合、安全与评测核心；v2 只替换展示层并增加工具、语音和图片输入，不重写医疗检索核心。
 
 ---
 
@@ -272,7 +307,18 @@ flowchart LR
 
 ```
 MedQA-GitHub/
-├── app/                     # Streamlit Web UI
+├── api/                     # v2 FastAPI + SSE 网关
+│   ├── main.py              # /api/health, /api/chat/stream
+│   ├── runtime.py           # LangGraph 节点事件 → SSE
+│   └── schemas.py           # 请求模型与历史窗口
+├── mcp_server/              # MCP stdio 服务
+│   └── medqa_mcp.py         # 5 个只读医疗知识工具
+├── web/                     # v2 Next.js + TypeScript 证据工作台
+│   └── src/
+│       ├── app/             # App Router 页面与样式
+│       ├── components/      # 工作台 / 证据检查器 / 图谱视图
+│       └── lib/             # SSE 客户端、类型与展示纯函数
+├── app/                     # v1 Streamlit Web UI（保留）
 │   ├── streamlit_app.py     # 对话式问答入口（streamlit run app/streamlit_app.py）
 │   └── ui_helpers.py        # 展示逻辑 / Memory 构建 / Agent 调用
 ├── src/                     # 核心生产代码
@@ -322,6 +368,7 @@ MedQA-GitHub/
 ## 13. 环境要求
 
 - **Python 3.11**
+- **Node.js 20+**（v2 前端）
 - **DeepSeek API Key**（[platform.deepseek.com](https://platform.deepseek.com)）
 - **Neo4j**（可选，可通过 `docker compose up -d neo4j` 一键启动；不启动时系统自动降级为纯 LightRAG 检索）
 - 本机内存建议 ≥ 8GB（bge embedding + LightRAG 加载）
@@ -332,8 +379,8 @@ MedQA-GitHub/
 
 ```bash
 # 1. 克隆仓库
-git clone <your-repo-url>
-cd MedQA-GitHub
+git clone https://github.com/constantine070711/MedQA-KG-RAG.git
+cd MedQA-KG-RAG
 
 # 2. 创建虚拟环境（Windows）
 python -m venv venv
@@ -345,6 +392,11 @@ pip install -r requirements.txt
 # 4. 配置环境变量
 copy .env.example .env
 #   编辑 .env，填入 DEEPSEEK_API_KEY（与可选的 NEO4J_PASSWORD）
+
+# 5. 安装 v2 前端（新终端）
+cd web
+npm install
+copy .env.example .env.local
 ```
 
 > 如果 `sentence-transformers` 安装时网络受限，可先单独安装合适版本的 torch 再安装依赖。
@@ -369,6 +421,7 @@ NEO4J_PASSWORD=your_neo4j_password_here
 # 应用
 APP_HOST=127.0.0.1
 APP_PORT=8501
+APP_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 LOG_LEVEL=INFO
 ```
 
@@ -392,8 +445,37 @@ python scripts/import_curated_to_neo4j.py  # 导入 curated 临床层
 
 ## 16. 启动
 
+### Docker Compose（推荐用于比赛评审）
+
+```powershell
+# 首次初始化 Neo4j + LightRAG 索引
+docker compose --profile init run --rm neo4j-init
+
+# 启动 API 和 Web
+docker compose up -d --build api web
+
+# 访问
+# Web: http://localhost:3000
+# API: http://localhost:8000/api/health
+```
+
+完整的环境变量、首轮索引、公网部署和故障排查见
+[docs/deployment.md](docs/deployment.md)。
+
+### 本地开发
+
 ```bash
-# Web UI（推荐）
+# v2 API（终端 1）
+uvicorn api.main:app --reload --port 8000
+
+# v2 Web UI（终端 2）
+cd web
+npm run dev
+
+# MCP Server（stdio，可选）
+python -m mcp_server.medqa_mcp
+
+# v1 Streamlit（仍可运行）
 streamlit run app/streamlit_app.py
 
 # 命令行问答（含图谱证据融合）
@@ -450,7 +532,8 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 ### 18.3 回归测试
 
 - 测试框架使用 stdlib `unittest`，通过 `python -m unittest` 运行（项目约定不引入额外测试框架）；
-- 本次整理验证：**571 tests collected（`tests/` 474 + `evaluation/` 97）/ 0 failed**；
+- v2 当前验证：`tests/` **495 项（471 passed / 24 skipped）**，另保留 `evaluation/` 97 项；
+- v1.0.0 历史基线为 571 项（`tests/` 474 + `evaluation/` 97）；
 - 其中 **24 项 Neo4j 集成测试** 在 Neo4j 未启动时自动 `skip`（启动 Neo4j 后全部实际执行，此前完整回归为 0 skipped）。
 
 ### 18.4 其他实验
@@ -472,6 +555,10 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 6. **可观测性**：request_id + 结构化 JSONL 日志 + 敏感信息脱敏 + 轮转，且对主流程零侵入；
 7. **工程规范**：纯函数可测性设计、白名单校验的 Cypher、参数化查询、有界遍历、完整单元测试；
 8. **数据合规**：数据来源与许可证全程记录（`data/SOURCES.md`），大型真实数据集不入库。
+9. **工具可核验**：LangGraph 的检索步骤通过 SSE 工具轨迹展示，外部 Agent 可通过 MCP 调用同一只读工具；
+10. **现代 Web 体验**：Next.js 流式回答、三栏证据工作台和移动端抽屉，而不是单纯聊天框；
+11. **多模态隐私边界**：语音由浏览器处理，图片 OCR 在本地执行，原图不上传；
+12. **可持续版本线**：v1 用 tag 冻结，v2 通过短分支、merge commit 和 CI 逐步演进。
 
 ---
 
@@ -483,6 +570,9 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 - **实验知识库不接入生产**：大规模扩展 KB 未带来固定评测集增益，保持隔离；
 - **LLM 输出非确定性**：同类问题的生成结果可能存在细微差异；
 - **Neo4j 为可选组件**：未配置时无结构化图谱证据。
+- **浏览器多模态能力依赖浏览器实现**：语音识别在 Chrome / Edge 支持较好；首次图片 OCR 需要下载中文模型；
+- **图片 OCR 仅用于文字识别和实体定位**：不自动解释个人检查结果，不构成图片诊断；
+- **在线演示尚未部署**：当前提供本地启动方式和截图，公网地址待部署阶段补充。
 
 ---
 
@@ -493,7 +583,10 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 - **更丰富的安全检测**：从关键词规则向语义 / 模型化检测演进；
 - **Memory 增强**：更长窗口、向量记忆、会话摘要；
 - **Benchmark 扩展**：接入更多公开医疗 QA 基准（如 CBLUE 相关任务）；
-- **部署化**：API 服务化、容器化部署、多用户隔离。
+- **部署化**：Next.js、FastAPI、Neo4j 的一键 Docker Compose、HTTPS 和公网健康检查；
+- **端到端测试**：补充 Playwright 流程覆盖、移动端截图和无障碍检查；
+- **多用户与安全审计**：身份认证、配额、审计日志和敏感数据保留策略；
+- **比赛交付**：技术报告 PDF、5-8 分钟演示视频、团队信息和最终 Release。
 
 ---
 

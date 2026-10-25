@@ -1,0 +1,46 @@
+name: MedQA v2 CI
+
+on:
+  push:
+    branches:
+      - v2
+      - "feat/**"
+      - "fix/**"
+  pull_request:
+    branches:
+      - v2
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: Web lint and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  api-contract:
+    name: API contract tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+      - run: pip install -r requirements-ci.txt
+      - run: python -m unittest tests.test_api_v2 tests.test_v2_tools tests.test_deployment -v
