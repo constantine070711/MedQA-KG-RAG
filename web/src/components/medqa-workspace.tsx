@@ -32,6 +32,7 @@ import remarkGfm from "remark-gfm";
 
 import { EvidencePanel } from "@/components/evidence-panel";
 import { ImageOcrDialog } from "@/components/image-ocr-dialog";
+import { RetrievalModeControl } from "@/components/retrieval-mode-control";
 import { WorkflowStatus } from "@/components/workflow-status";
 import { useSpeechInput, useSpeechOutput } from "@/hooks/use-speech";
 import { API_BASE, streamChat } from "@/lib/api";
@@ -386,25 +387,12 @@ export function MedQAWorkspace() {
           </div>
         </div>
 
-        <div className="ml-4 hidden items-center gap-2 md:flex">
-          <div className="flex items-center gap-1 rounded-lg border border-[var(--line)] bg-[var(--surface-raised)] p-1">
-            {(["mix", "local", "global"] as const).map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setMode(item)}
-                disabled={isStreaming}
-                className={`min-h-7 rounded-md px-2.5 text-[10px] font-semibold transition ${
-                  mode === item
-                    ? "bg-[var(--surface)] text-[var(--primary)] shadow-sm"
-                    : "text-[var(--ink-faint)] hover:text-[var(--ink)]"
-                }`}
-                title={`检索模式：${item}`}
-              >
-                {item === "mix" ? "混合" : item === "local" ? "局部" : "全局"}
-              </button>
-            ))}
-          </div>
+        <div className="ml-2 flex min-w-0 items-center gap-2 md:ml-4">
+          <RetrievalModeControl
+            value={mode}
+            onChange={setMode}
+            disabled={isStreaming}
+          />
           <ApiStatusBadge status={apiStatus} />
         </div>
 
