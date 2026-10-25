@@ -17,6 +17,7 @@ import {
   Plus,
   Search,
   Send,
+  Settings2,
   Square,
   Stethoscope,
   Trash2,
@@ -33,7 +34,11 @@ import { EvidencePanel } from "@/components/evidence-panel";
 import { ImageOcrDialog } from "@/components/image-ocr-dialog";
 import { RetrievalModeControl } from "@/components/retrieval-mode-control";
 import { WorkflowStatus } from "@/components/workflow-status";
-import { useSpeechInput, useSpeechOutput } from "@/hooks/use-speech";
+import {
+  useSpeechInput,
+  useSpeechOutput,
+  type SpeechVoiceOption,
+} from "@/hooks/use-speech";
 import { API_BASE, streamChat } from "@/lib/api";
 import { decisionLabel, safetyMeta, sourceLabels } from "@/lib/format";
 import type {
@@ -560,6 +565,9 @@ export function MedQAWorkspace() {
                         onOpenEvidence={() => setDrawerOpen(true)}
                         speechSupported={speechOutput.supported}
                         speechPlaying={speakingMessageId === message.id}
+                        speechVoices={speechOutput.voices}
+                        speechVoiceURI={speechOutput.voiceURI}
+                        onSpeechVoiceChange={speechOutput.setVoiceURI}
                         onToggleSpeech={() => {
                           const answer =
                             message.response?.answer || message.content;
@@ -731,6 +739,9 @@ interface AssistantMessageProps {
   onOpenEvidence: () => void;
   speechSupported: boolean;
   speechPlaying: boolean;
+  speechVoices: SpeechVoiceOption[];
+  speechVoiceURI: string;
+  onSpeechVoiceChange: (voiceURI: string) => void;
   onToggleSpeech: () => void;
 }
 
@@ -743,6 +754,9 @@ function AssistantMessage({
   onOpenEvidence,
   speechSupported,
   speechPlaying,
+  speechVoices,
+  speechVoiceURI,
+  onSpeechVoiceChange,
   onToggleSpeech,
 }: AssistantMessageProps) {
   const safety = safetyMeta(message.response?.safety_level);
@@ -829,6 +843,31 @@ function AssistantMessage({
                 <Wrench className="size-2.5" aria-hidden="true" />
                 {toolCount} 个工具
               </span>
+            ) : null}
+            {speechSupported && speechVoices.length > 0 ? (
+              <label
+                className="flex min-h-8 max-w-56 items-center gap-1 rounded-md border border-[var(--line)] bg-[var(--surface)] px-2 text-[10px] text-[var(--ink-faint)]"
+                title="选择朗读声音，列表来自当前浏览器可用的中文语音"
+              >
+                <Settings2 className="size-3 shrink-0" aria-hidden="true" />
+                <span className="sr-only">选择朗读声音</span>
+                <select
+                  value={speechVoiceURI}
+                  onChange={(event) =>
+                    onSpeechVoiceChange(event.target.value)
+                  }
+                  aria-label="选择朗读声音"
+                  className="min-w-0 max-w-48 bg-transparent text-[10px] text-[var(--ink-soft)] outline-none"
+                >
+                  <option value="">自动选择（推荐）</option>
+                  {speechVoices.map((voice) => (
+                    <option key={voice.voiceURI} value={voice.voiceURI}>
+                      {voice.name}
+                      {voice.localService ? "" : " · 在线"}
+                    </option>
+                  ))}
+                </select>
+              </label>
             ) : null}
             <button
               type="button"

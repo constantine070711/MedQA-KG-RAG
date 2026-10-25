@@ -42,6 +42,14 @@ interface SpeechRecognitionLike {
 
 type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
 
+export interface SpeechVoiceOption {
+  voiceURI: string;
+  name: string;
+  lang: string;
+  localService: boolean;
+  default: boolean;
+}
+
 declare global {
   interface Window {
     SpeechRecognition?: SpeechRecognitionConstructor;
@@ -57,6 +65,8 @@ const SPEECH_ERRORS: Record<string, string> = {
   "no-speech": "没有检测到语音，请重试。",
 };
 
+const VOICE_STORAGE_KEY = "medqa:speech-voice";
+
 function subscribeToBrowserCapability() {
   return () => {};
 }
@@ -69,6 +79,71 @@ function getSynthesisSupport() {
   return (
     "speechSynthesis" in window && "SpeechSynthesisUtterance" in window
   );
+}
+
+function isChineseVoice(voice: SpeechSynthesisVoice) {
+  return (
+    /^zh(?:-|_)/i.test(voice.lang) ||
+    /chinese|mandarin|中文|普通话/i.test(voice.name)
+  );
+}
+
+function voiceQualityScore(voice: SpeechSynthesisVoice) {
+  let score = 0;
+  if (/natural/i.test(voice.name)) {
+    score += 80;
+  }
+  if (/neural/i.test(voice.name)) {
+    score += 60;
+  }
+  if (/online/i.test(voice.name)) {
+    score += 40;
+  }
+  if (/xiaoxiao|xiaoyi|yunxi|yunjian|xiaohan|晓晓|晓伊|云希|云健/i.test(voice.name)) {
+    score += 50;
+  }
+  if (/google/i.test(voice.name)) {
+    score += 30;
+  }
+  if (!voice.localService) {
+    score += 10;
+  }
+  if (voice.default) {
+    score += 2;
+  }
+  if (/desktop|legacy/i.test(voice.name)) {
+    score -= 20;
+  }
+  return score;
+}
+
+function chineseVoiceOptions(): SpeechVoiceOption[] {
+  if (!("speechSynthesis" in window)) {
+    return [];
+  }
+  return window.speechSynthesis
+    .getVoices()
+    .filter(isChineseVoice)
+    .sort(
+      (left, right) =>
+        voiceQualityScore(right) - voiceQualityScore(left) ||
+        left.name.localeCompare(right.name, "zh-CN"),
+    )
+    .map((voice) => ({
+      voiceURI: voice.voiceURI,
+      name: voice.name,
+      lang: voice.lang,
+      localService: voice.localService,
+      default: voice.default,
+    }));
+}
+
+function preferredChineseVoice(voices: SpeechSynthesisVoice[]) {
+  return voices.filter(isChineseVoice).sort(
+    (left, right) =>
+      voiceQualityScore(right) - voiceQualityScore(left) ||
+      left.name.localeCompare(right.name, "zh-CN"),
+  )[0];
 }
 
 export function useSpeechInput(
@@ -173,6 +248,8 @@ function textForSpeech(text: string): string {
 
 export function useSpeechOutput(onEnd?: () => void) {
   const [speaking, setSpeaking] = useState(false);
+  const [voices, setVoices] = useState<SpeechVoiceOption[]>([]);
+  const [voiceURI, setVoiceURI] = useState("");
   const onEndRef = useRef(onEnd);
   const supported = useSyncExternalStore(
     subscribeToBrowserCapability,
@@ -188,6 +265,50 @@ export function useSpeechOutput(onEnd?: () => void) {
     return () => {
       window.speechSynthesis?.cancel();
     };
+  }, []);
+
+  useEffect(() => {
+    if (!("speechSynthesis" in window)) {
+      return;
+    }
+
+    const loadVoices = () => {
+      const nextVoices = chineseVoiceOptions();
+      setVoices(nextVoices);
+      setVoiceURI((current) => {
+        if (current && nextVoices.some((voice) => voice.voiceURI === current)) {
+          return current;
+        }
+        try {
+          const stored = window.localStorage.getItem(VOICE_STORAGE_KEY);
+          if (stored && nextVoices.some((voice) => voice.voiceURI === stored)) {
+            return stored;
+          }
+        } catch {
+          // Speech still works when storage is unavailable.
+        }
+        return "";
+      });
+    };
+
+    loadVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    return () => {
+      window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+    };
+  }, []);
+
+  const selectVoice = useCallback((nextVoiceURI: string) => {
+    setVoiceURI(nextVoiceURI);
+    try {
+      if (nextVoiceURI) {
+        window.localStorage.setItem(VOICE_STORAGE_KEY, nextVoiceURI);
+      } else {
+        window.localStorage.removeItem(VOICE_STORAGE_KEY);
+      }
+    } catch {
+      // Ignore storage failures and keep the in-memory selection.
+    }
   }, []);
 
   const stop = useCallback(() => {
@@ -210,11 +331,14 @@ export function useSpeechOutput(onEnd?: () => void) {
     utterance.lang = "zh-CN";
     utterance.rate = 0.98;
     utterance.pitch = 1;
-    const chineseVoice = window.speechSynthesis
-      .getVoices()
-      .find((voice) => voice.lang.toLowerCase().startsWith("zh"));
-    if (chineseVoice) {
-      utterance.voice = chineseVoice;
+    const availableVoices = window.speechSynthesis.getVoices();
+    const selectedVoice = voiceURI
+      ? availableVoices.find((voice) => voice.voiceURI === voiceURI)
+      : undefined;
+    const outputVoice = selectedVoice ?? preferredChineseVoice(availableVoices);
+    if (outputVoice) {
+      utterance.voice = outputVoice;
+      utterance.lang = outputVoice.lang;
     }
     utterance.onend = () => {
       setSpeaking(false);
@@ -226,7 +350,15 @@ export function useSpeechOutput(onEnd?: () => void) {
     };
     setSpeaking(true);
     window.speechSynthesis.speak(utterance);
-  }, []);
+  }, [voiceURI]);
 
-  return { supported, speaking, speak, stop };
+  return {
+    supported,
+    speaking,
+    voices,
+    voiceURI,
+    setVoiceURI: selectVoice,
+    speak,
+    stop,
+  };
 }
