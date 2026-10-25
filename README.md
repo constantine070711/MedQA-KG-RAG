@@ -196,10 +196,10 @@ flowchart TD
 
 最终，**仅结构化的 Neo4j 证据段 + 安全指令被注入 system_prompt**，向量块等由 LightRAG 检索进上下文，LLM 在「证据受限」的约束下生成回答。
 
-**知识图谱可视化**：回答命中图谱时，系统会渲染命中的实体与关系子图（pyvis / vis.js，内联无 CDN 依赖）：
+**知识图谱可视化**：v2 证据检查器会根据当前回答命中的结构化证据生成实体关系图，并可在“证据 / 图谱 / 引用”之间切换。v1 的 pyvis / vis.js 可视化仍保留在历史分支中：
 
 <p align="center">
-  <img src="docs/images/knowledge-graph.png" alt="MedQA 知识图谱可视化" width="85%"/>
+  <img src="docs/images/v2-evidence-graph.png" alt="MedQA v2 问答、工具轨迹与图谱证据页面" width="88%"/>
 </p>
 
 ---
@@ -501,7 +501,7 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 回答界面会同时展示：**安全等级、可靠性判断、证据来源（LightRAG / Neo4j 三元组）、来源引用、知识图谱可视化**。
 
 <p align="center">
-  <img src="docs/images/ui-demo.png" alt="MedQA Web UI 对话界面演示" width="85%"/>
+  <img src="docs/images/v2-workspace.png" alt="MedQA v2 证据工作台首页" width="88%"/>
 </p>
 
 
