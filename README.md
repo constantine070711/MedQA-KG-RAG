@@ -61,14 +61,10 @@
 - **v2（当前开发线）**：Next.js + TypeScript 证据工作台，FastAPI SSE 流式接口，保留现有 LangGraph / RAG / Neo4j 核心。
 - **v1.0.0（已保留）**：原始 Streamlit 版本，可通过 Git tag `v1.0.0` 查看。
 
-### 赛事材料
+### 项目文档
 
 - [公开文档索引](docs/README.md)
 - [真实开发时间线](docs/development-history.md)
-- [评分项证据矩阵](docs/competition/scoring-matrix.md)
-- [5-8 分钟演示脚本](docs/competition/demo-script.md)
-- [技术文档目录](docs/competition/technical-report-outline.md)
-- [提交检查清单](docs/competition/submission-checklist.md)
 
 ---
 
@@ -89,7 +85,7 @@
 - **Phase 8**：Streamlit Web UI + 知识图谱可视化；
 - **Phase 9**：多轮对话 Memory；
 - **Phase 10**：结构化医学知识库扩展实验（独立 Experiment KB，与生产环境隔离）、Reranker 实验评估、日志与监控旁路。
-- **v2 Competition Edition**：Next.js 证据工作台、FastAPI SSE、MCP 工具、语音输入/朗读、本地图片 OCR 和 GitHub Actions。
+- **v2 应用版本**：Next.js 证据工作台、FastAPI SSE、MCP 工具、语音输入/朗读、本地图片 OCR 和 GitHub Actions。
 
 ---
 
@@ -445,7 +441,7 @@ python scripts/import_curated_to_neo4j.py  # 导入 curated 临床层
 
 ## 16. 启动
 
-### Docker Compose（推荐用于比赛评审）
+### Docker Compose（推荐）
 
 ```powershell
 # 首次初始化 Neo4j + LightRAG 索引
@@ -585,8 +581,7 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 - **Benchmark 扩展**：接入更多公开医疗 QA 基准（如 CBLUE 相关任务）；
 - **部署化**：Next.js、FastAPI、Neo4j 的一键 Docker Compose、HTTPS 和公网健康检查；
 - **端到端测试**：补充 Playwright 流程覆盖、移动端截图和无障碍检查；
-- **多用户与安全审计**：身份认证、配额、审计日志和敏感数据保留策略；
-- **比赛交付**：技术报告 PDF、5-8 分钟演示视频、团队信息和最终 Release。
+- **多用户与安全审计**：身份认证、配额、审计日志和敏感数据保留策略。
 
 ---
 
