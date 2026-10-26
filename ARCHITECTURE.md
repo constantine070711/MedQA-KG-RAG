@@ -1,13 +1,13 @@
 # ARCHITECTURE.md — 系统架构文档
 
-> 版本: v3.0 — v2 竞赛应用层（Next.js + FastAPI SSE + MCP + 语音/OCR）+ 已冻结的 v1 检索/证据/安全核心；
+> 版本: v3.0 — v2 应用层（Next.js + FastAPI SSE + MCP + 语音/OCR）+ 已冻结的 v1 检索/证据/安全核心；
 > CBLUE 数据适配、Reranker 重排、日志监控保持独立实验/旁路边界。
 > 日期: 2026-10-19
 > 底座: LightRAG 1.5.4
 
 ---
 
-## 0. v2 竞赛应用架构
+## 0. v2 应用架构
 
 v2 不重写医疗检索核心，而是将 v1 已有的安全、检索、证据融合和可靠性决策
 暴露给现代 Web 应用。
@@ -683,4 +683,4 @@ Phase 1-3 (当前)               Phase 4-5                    Phase 7-8
 | 2026-08-25 | v2.3 — CBLUE 独立数据适配管道（src/data_adapter，三层隔离，Entity Linking 候选；不集成生产链路） |
 | 2026-08-25 | v2.4 — Reranker 实验评估（src/retrieval/rerank.py，实验阶段未接入生产）+ 日志监控模块（request_id + JSONL + metrics 白名单 + 脱敏） |
 | 2026-08-26 | v2.5 — 日志轮转（src/monitoring.py `_rotate_if_needed`，5MB/3 备份，失败静默）+ UI 多轮 + Memory 日志补验 |
-| 2026-10-19 | v3.0 — v2 竞赛应用：Next.js 16 证据工作台 + FastAPI SSE + MCP 工具/轨迹 + 语音 + 本地 OCR + CI |
+| 2026-10-19 | v3.0 — v2 应用：Next.js 16 证据工作台 + FastAPI SSE + MCP 工具/轨迹 + 语音 + 本地 OCR + CI |

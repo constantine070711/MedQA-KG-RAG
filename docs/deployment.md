@@ -187,4 +187,4 @@ The UI shows workflow stages while this work is in progress.
 - Never bake the API key into a Docker image.
 - Do not publish ports `7474` or `7687` in production.
 - Use a dedicated Neo4j password and a public-origin allowlist.
-- Keep the review environment available for the competition review window.
+- Keep the demo environment available while it is being evaluated.

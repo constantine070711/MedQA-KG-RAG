@@ -6,6 +6,8 @@
   evaluation summary.
 - [Architecture](../ARCHITECTURE.md): inherited v1 core plus v2 presentation and
   tool layers.
+- [Development history](development-history.md): implementation timeline from
+  v1 through the current v2 application.
 - [v2 Architecture](v2-architecture.md): FastAPI, SSE, MCP, voice, and OCR
   details.
 
@@ -16,15 +18,6 @@
 - [Image OCR](v2-report-ocr.md)
 - [Deployment](deployment.md)
 - [Windows Docker troubleshooting](windows-docker-troubleshooting.md)
-
-## Competition
-
-- [Competition material index](competition/README.md)
-- [Development history](development-history.md)
-- [Scoring evidence matrix](competition/scoring-matrix.md)
-- [Demo script](competition/demo-script.md)
-- [Technical report outline](competition/technical-report-outline.md)
-- [Submission checklist](competition/submission-checklist.md)
 
 ## Data and Evaluation
 

@@ -86,7 +86,7 @@ merges, CI runs, and release tags.
 - Preserved the known limitations of the rule-based safety layer and small
   curated graph instead of presenting them as production guarantees.
 
-## 2026-10-19: v2 Competition Application
+## 2026-10-19: v2 Application Release
 
 - Added FastAPI SSE streaming and a Next.js 16 + TypeScript evidence workspace.
 - Added workflow-stage events, evidence inspection, responsive desktop/mobile

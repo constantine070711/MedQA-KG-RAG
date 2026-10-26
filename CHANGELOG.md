@@ -6,8 +6,7 @@ All notable changes to MedQA are documented here.
 
 ### Added
 
-- Competition material index, authentic development timeline, scoring matrix,
-  demo script, report outline, and submission checklist.
+- Authentic development timeline covering v1 and v2 implementation.
 - Public documentation index and synchronized v2 architecture, capabilities,
   testing counts, limitations, and future-work sections.
 - Production API and standalone Next.js container images, three-service Compose
