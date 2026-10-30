@@ -618,8 +618,6 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 | 学校 | 西安工业大学 |
 | 参赛组别 | A组 |
 
-团队成员与分工信息以大赛正式报名材料为准。
-
 ---
 
 ## Research Potential（科研方向）
