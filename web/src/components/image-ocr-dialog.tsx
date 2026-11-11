@@ -8,6 +8,7 @@ import {
   LoaderCircle,
   ScanText,
   ShieldCheck,
+  Sparkles,
   X,
 } from "lucide-react";
 import {
@@ -38,6 +39,7 @@ interface ImageOcrDialogProps {
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_TEXT_LENGTH = 4000;
+type RecognitionMode = "ai" | "local";
 
 function normalizeForMatch(value: string): string {
   return value.toLocaleLowerCase("zh-CN").replace(/\s+/g, "");
@@ -72,6 +74,9 @@ export function ImageOcrDialog({
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [fallbackNotice, setFallbackNotice] = useState("");
+  const [recognitionMode, setRecognitionMode] =
+    useState<RecognitionMode>("ai");
   const [entities, setEntities] = useState<SupportedEntity[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -170,18 +175,50 @@ export function ImageOcrDialog({
     setProgress(0);
     setStatus("");
     setError("");
+    setFallbackNotice("");
   }
 
-  async function runOcr() {
-    if (!file || processing) {
-      return;
-    }
-    setProcessing(true);
-    setError("");
-    setProgress(0);
-    setStatus("加载 OCR 引擎");
-    let worker: OcrWorker | null = null;
+  async function runAiOcr(selectedFile: File): Promise<string> {
+    setStatus("正在上传图片并进行 AI 识图");
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    const response = await fetch(`${API_BASE}/api/vision/extract`, {
+      method: "POST",
+      body: formData,
+    });
 
+    if (!response.ok) {
+      let message = "AI 识图服务暂时不可用";
+      try {
+        const payload = await response.json();
+        const detail = payload?.detail;
+        if (typeof detail === "string") {
+          message = detail;
+        } else if (typeof detail?.message === "string") {
+          message = detail.message;
+        }
+      } catch {
+        // Keep the short fallback message when the error body is not JSON.
+      }
+      throw new Error(message);
+    }
+
+    const payload = await response.json();
+    const recognized =
+      typeof payload?.text === "string"
+        ? payload.text.trim().slice(0, MAX_TEXT_LENGTH)
+        : "";
+    if (!recognized) {
+      throw new Error("AI 识图没有返回有效文字");
+    }
+    return recognized;
+  }
+
+  async function runLocalOcr(
+    selectedFile: File,
+  ): Promise<{ text: string; confidence: number | null }> {
+    setStatus("加载本地 OCR 引擎");
+    let worker: OcrWorker | null = null;
     try {
       const tesseract = await import("tesseract.js");
       worker = await tesseract.createWorker(["chi_sim", "eng"], 1, {
@@ -197,17 +234,14 @@ export function ImageOcrDialog({
         tessedit_pageseg_mode: tesseract.PSM.SPARSE_TEXT,
         preserve_interword_spaces: "1",
       });
-      const result = await worker.recognize(file);
+      const result = await worker.recognize(selectedFile);
       const recognized = result.data.text.trim().slice(0, MAX_TEXT_LENGTH);
-      setText(recognized);
-      setConfidence(result.data.confidence);
-      setStatus(recognized ? "识别完成" : "未识别到清晰文字");
+      setStatus(recognized ? "本地识别完成，请校对文字" : "未识别到清晰文字");
       setProgress(100);
-    } catch {
-      setError(
-        "图片识别失败。请确认网络可下载中文 OCR 模型，或换一张更清晰的图片。",
-      );
-      setStatus("");
+      return {
+        text: recognized,
+        confidence: result.data.confidence,
+      };
     } finally {
       if (worker) {
         await worker.terminate().catch(() => undefined);
@@ -215,6 +249,53 @@ export function ImageOcrDialog({
       if (workerRef.current === worker) {
         workerRef.current = null;
       }
+    }
+  }
+
+  async function runRecognition() {
+    if (!file || processing) {
+      return;
+    }
+
+    setProcessing(true);
+    setError("");
+    setFallbackNotice("");
+    setProgress(0);
+
+    try {
+      if (recognitionMode === "ai") {
+        try {
+          const recognized = await runAiOcr(file);
+          setText(recognized);
+          setConfidence(null);
+          setProgress(100);
+          setStatus("AI 识图完成，请校对文字");
+        } catch (aiError) {
+          const reason =
+            aiError instanceof Error
+              ? aiError.message
+              : "AI 识图服务暂时不可用";
+          setFallbackNotice(
+            `AI 识图失败：${reason}。已自动切换到本地 OCR。`,
+          );
+          setRecognitionMode("local");
+          try {
+            const localResult = await runLocalOcr(file);
+            setText(localResult.text);
+            setConfidence(localResult.confidence);
+          } catch {
+            setError(
+              "AI 识图和本地识别都没有完成。请换一张更清晰的图片，或手动输入文字。",
+            );
+            setStatus("");
+          }
+        }
+      } else {
+        const localResult = await runLocalOcr(file);
+        setText(localResult.text);
+        setConfidence(localResult.confidence);
+      }
+    } finally {
       setProcessing(false);
     }
   }
@@ -250,7 +331,9 @@ export function ImageOcrDialog({
               药盒 / 报告文字识别
             </h2>
             <p className="text-[10px] text-[var(--ink-faint)]">
-              图片在浏览器本地识别，不自动发送到医疗问答服务
+              {recognitionMode === "ai"
+                ? "AI 识图会将当前图片发送到后端模型识别"
+                : "本地识别不会上传图片，适合清晰截图"}
             </p>
           </div>
           <button
@@ -316,9 +399,57 @@ export function ImageOcrDialog({
                 </div>
               ) : null}
 
+              <div
+                role="radiogroup"
+                aria-label="识别方式"
+                className="mt-3 grid grid-cols-2 gap-2"
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={recognitionMode === "ai"}
+                  onClick={() => {
+                    setRecognitionMode("ai");
+                    setFallbackNotice("");
+                    setError("");
+                  }}
+                  disabled={processing}
+                  className={`flex min-h-10 items-center justify-center gap-1.5 rounded-lg border px-2 text-[11px] font-semibold transition disabled:opacity-60 ${
+                    recognitionMode === "ai"
+                      ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                      : "border-[var(--line)] bg-[var(--surface-raised)] text-[var(--ink-soft)]"
+                  }`}
+                >
+                  <Sparkles className="size-3.5" aria-hidden="true" />
+                  AI 识图
+                  <span className="rounded-full bg-[var(--primary)] px-1.5 py-0.5 text-[8px] text-white">
+                    推荐
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={recognitionMode === "local"}
+                  onClick={() => {
+                    setRecognitionMode("local");
+                    setFallbackNotice("");
+                    setError("");
+                  }}
+                  disabled={processing}
+                  className={`flex min-h-10 items-center justify-center gap-1.5 rounded-lg border px-2 text-[11px] font-semibold transition disabled:opacity-60 ${
+                    recognitionMode === "local"
+                      ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                      : "border-[var(--line)] bg-[var(--surface-raised)] text-[var(--ink-soft)]"
+                  }`}
+                >
+                  <ScanText className="size-3.5" aria-hidden="true" />
+                  本地识别
+                </button>
+              </div>
+
               <button
                 type="button"
-                onClick={() => void runOcr()}
+                onClick={() => void runRecognition()}
                 disabled={!file || processing}
                 className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-[var(--primary)] px-3 text-xs font-semibold text-white transition hover:bg-[var(--primary-strong)] disabled:bg-[var(--line)] disabled:text-[var(--ink-faint)]"
               >
@@ -327,10 +458,18 @@ export function ImageOcrDialog({
                     className="size-4 animate-spin"
                     aria-hidden="true"
                   />
+                ) : recognitionMode === "ai" ? (
+                  <Sparkles className="size-4" aria-hidden="true" />
                 ) : (
                   <ScanText className="size-4" aria-hidden="true" />
                 )}
-                {processing ? "正在识别" : "识别图片文字"}
+                {processing
+                  ? recognitionMode === "ai"
+                    ? "AI 识图中"
+                    : "本地识别中"
+                  : recognitionMode === "ai"
+                    ? "AI 识别图片"
+                    : "本地识别文字"}
               </button>
             </div>
 
@@ -360,13 +499,23 @@ export function ImageOcrDialog({
                 <div className="mt-2">
                   <div className="flex items-center justify-between text-[10px] text-[var(--ink-faint)]">
                     <span>{status}</span>
-                    <span>{progress}%</span>
+                    <span>
+                      {recognitionMode === "local" ? `${progress}%` : "请稍候"}
+                    </span>
                   </div>
                   <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[var(--line)]">
-                    <div
-                      className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-300"
-                      style={{ width: `${progress}%` }}
-                    />
+                    {recognitionMode === "local" ? (
+                      <div
+                        className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-300"
+                        style={{ width: `${progress}%` }}
+                      />
+                    ) : (
+                      <div
+                        className={`h-full rounded-full bg-[var(--primary)] ${
+                          processing ? "w-1/3 animate-pulse" : "w-full"
+                        }`}
+                      />
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -396,6 +545,15 @@ export function ImageOcrDialog({
                 </div>
               ) : null}
 
+              {fallbackNotice ? (
+                <p
+                  role="status"
+                  className="mt-3 rounded-lg bg-[var(--primary-soft)] px-3 py-2 text-[10px] leading-5 text-[var(--ink-soft)]"
+                >
+                  {fallbackNotice}
+                </p>
+              ) : null}
+
               {error ? (
                 <p
                   role="alert"
@@ -410,7 +568,9 @@ export function ImageOcrDialog({
                   className="mt-0.5 size-3.5 shrink-0 text-[var(--primary)]"
                   aria-hidden="true"
                 />
-                图片只在当前浏览器中识别。继续提问时，编辑后的文字会发送至问答服务；
+                {recognitionMode === "ai"
+                  ? "AI 识图会把当前图片发送到后端多模态模型；服务端不保存原图，识别结果需要人工校对。"
+                  : "图片只在当前浏览器中识别，不会上传。继续提问时，只会发送你校对后的文字。"}
                 系统不会根据图片自动诊断或解释个人检查结果。
               </div>
             </div>

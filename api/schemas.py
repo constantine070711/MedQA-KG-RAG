@@ -38,3 +38,14 @@ class ToolCallRequest(BaseModel):
 
     tool: str = Field(min_length=1, max_length=80)
     arguments: dict = Field(default_factory=dict)
+
+
+class VisionExtractResponse(BaseModel):
+    """Text extracted from an uploaded image."""
+
+    text: str
+    provider: str
+    model: str
+    latency_ms: float
+    confidence: float | None = None
+    warnings: list[str] = Field(default_factory=list)

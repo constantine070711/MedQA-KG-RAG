@@ -67,6 +67,14 @@ class Config:
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-v4-flash"
 
+    # --- Vision API（默认复用 DeepSeek 配置） ---
+    vision_enabled: bool = True
+    vision_api_key: str = ""
+    vision_base_url: str = ""
+    vision_model: str = ""
+    vision_timeout_seconds: int = 60
+    vision_max_image_mb: int = 8
+
     # --- Embedding 模型 ---
     embedding_model_name: str = "BAAI/bge-small-zh-v1.5"
     embedding_local_path: str = ""
@@ -90,6 +98,13 @@ class Config:
 
     def __post_init__(self):
         """自动推导路径"""
+        if not self.vision_api_key:
+            self.vision_api_key = self.deepseek_api_key
+        if not self.vision_base_url:
+            self.vision_base_url = self.deepseek_base_url
+        if not self.vision_model:
+            self.vision_model = self.deepseek_model
+
         if not self.embedding_local_path:
             local_path = self.models_dir / "bge-small-zh-v1.5"
             if local_path.exists():
@@ -136,6 +151,7 @@ class Config:
             f"  数据目录:   {self.data_dir}\n"
             f"  缓存目录:   {self.cache_dir}\n"
             f"  LLM:        {self.deepseek_model} @ {self.deepseek_base_url}\n"
+            f"  Vision:      {self.vision_model} ({'启用' if self.vision_enabled else '关闭'})\n"
             f"  Embedding:  {self.embedding_model_name} ({self.embedding_dim}d, {embed_source})\n"
             f"  Neo4j:      {self.neo4j_uri} ({'已配置' if self.neo4j_password else '待配置'})\n"
         )
@@ -176,6 +192,13 @@ def get_config(reload: bool = False) -> Config:
         deepseek_api_key=os.getenv("DEEPSEEK_API_KEY", ""),
         deepseek_base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
         deepseek_model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
+        vision_enabled=os.getenv("VISION_ENABLED", "true").strip().lower()
+        not in {"0", "false", "no", "off"},
+        vision_api_key=os.getenv("VISION_API_KEY", ""),
+        vision_base_url=os.getenv("VISION_BASE_URL", ""),
+        vision_model=os.getenv("VISION_MODEL", ""),
+        vision_timeout_seconds=int(os.getenv("VISION_TIMEOUT_SECONDS", "60")),
+        vision_max_image_mb=int(os.getenv("VISION_MAX_IMAGE_MB", "8")),
         neo4j_uri=os.getenv("NEO4J_URI", "bolt://localhost:7687"),
         neo4j_user=os.getenv("NEO4J_USER", "neo4j"),
         neo4j_password=os.getenv("NEO4J_PASSWORD", ""),

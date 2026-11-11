@@ -34,6 +34,7 @@ langgraph>=1.0
 fastapi>=0.115
 uvicorn[standard]>=0.30
 mcp>=1.28,<2
+python-multipart>=0.0.9
 
 # --- Web UI 与知识图谱可视化 ---
 streamlit>=1.60
