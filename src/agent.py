@@ -40,6 +40,7 @@ from src.medical_core.safety import (
     SafetyChecker,
     MEDICAL_DISCLAIMER,
     SYSTEM_PROMPT_SAFE,
+    get_emergency_response,
 )
 from src.evidence_fusion import (
     FusionConfig,
@@ -62,7 +63,7 @@ from evaluation.metrics import (
     safety_signal_presence,
     combined_reliability,
 )
-from evaluation.runner import detect_refusal
+from evaluation.refusal_detection_v2 import detect_refusal_v2
 from evaluation.citation_verifier import analyze_citations
 from evaluation.uncertainty_signals import extract_signals
 from evaluation.reliability_decision import make_reliability_decision
@@ -182,6 +183,15 @@ _REFUSAL_TEXT: dict[str, str] = {
                  "建议您咨询专业医生或查阅权威医学资料。",
     "RELIABILITY_LOW": "由于缺少可靠的医学依据，本系统无法就该问题给出确定回答。"
                        "建议您前往正规医疗机构咨询。",
+    "UNSAFE_ANSWER": "该回答未通过医疗安全校验，本系统不会展示未经确认的诊疗内容。"
+                     "建议您前往正规医院咨询专业医生。",
+    "REFUSAL_DETECTED": "当前回答没有提供足够的医学内容。"
+                        "建议您补充问题，或咨询专业医生。",
+    "UNSAFE_ANSWER_REPLACEMENT": "原回答未通过医疗安全校验，已替换为安全说明。",
+    "EMERGENCY_ESCALATION": (
+        "您描述的情况可能需要紧急医疗救助。请立即拨打急救电话（中国：120）"
+        "或前往最近的医院急诊科。"
+    ),
 }
 _DEFAULT_REFUSAL = "本系统无法就该问题提供实质性医学内容。建议您咨询专业医生。"
 
@@ -191,6 +201,47 @@ def _refusal_answer(decision: Optional[dict]) -> str:
     rc = (decision or {}).get("reason_code")
     msg = _REFUSAL_TEXT.get(rc, _DEFAULT_REFUSAL)
     return f"{msg}\n\n---\n{MEDICAL_DISCLAIMER}"
+
+
+def _safe_replacement_answer(refusal: Optional[dict]) -> str:
+    """为不安全的剂量/诊断回答提供固定、稳定、可展示的安全说明。"""
+    profile = (refusal or {}).get("question_profile") or {}
+    if not isinstance(profile, dict):
+        profile = {}
+    if profile.get("dosage_intent"):
+        body = (
+            "关于具体用药剂量，本系统不能根据文字描述确定片数、毫克数或服药频次。"
+            "具体方案需要结合药品剂型、规格、年龄、肝肾功能和正在服用的其他药物，"
+            "由医生或药师评估后决定。请勿自行调整剂量或停药。"
+        )
+    elif profile.get("diagnosis_intent"):
+        body = (
+            "仅凭症状描述不能直接确诊疾病。建议记录症状出现时间、诱因和伴随表现，"
+            "尽快前往正规医院就诊，由医生结合体格检查和必要的实验室检查判断。"
+        )
+    else:
+        body = (
+            "该回答未通过医疗安全校验，本系统不会展示未经确认的诊疗内容。"
+            "建议您咨询专业医生。"
+        )
+    return f"{body}\n\n---\n{MEDICAL_DISCLAIMER}"
+
+
+def _revised_answer(
+    answer: str,
+    decision: Optional[dict],
+    refusal: Optional[dict] = None,
+) -> str:
+    """展示层：安全修订。急症和不安全内容使用固定模板。"""
+    if (decision or {}).get("reason_code") == "EMERGENCY_ESCALATION":
+        return get_emergency_response()
+    if (decision or {}).get("reason_code") == "UNSAFE_ANSWER_REPLACEMENT":
+        return _safe_replacement_answer(refusal)
+    if not answer:
+        return MEDICAL_DISCLAIMER
+    if "医疗免责声明" in answer:
+        return answer
+    return f"{answer}\n\n---\n{MEDICAL_DISCLAIMER}"
 
 
 def _derive_intent(state: AgentState, uncertainty: Optional[dict]) -> str:
@@ -388,8 +439,8 @@ class MedQAAgent:
         rels = lr.get("relationships") or []
         nm = self._get_name_map()
 
-        # E1: detect_refusal（复用 runner）
-        refusal = detect_refusal(answer, safety_check_result=safety)
+        # E1: 三层拒答 / 回答安全检查（确定性规则）
+        refusal = detect_refusal_v2(answer, safety_check_result=safety, question=question)
 
         # E2: citation（复用 B3）
         try:
@@ -491,7 +542,7 @@ class MedQAAgent:
         elif is_refusal or d == "refuse":
             final_answer = _refusal_answer(decision)
         elif d == "revise":
-            final_answer = f"{answer}\n\n---\n{MEDICAL_DISCLAIMER}" if answer else MEDICAL_DISCLAIMER
+            final_answer = _revised_answer(answer, decision, state.get("refusal"))
         else:
             final_answer = answer
 

@@ -56,7 +56,7 @@ from evaluation.metrics import (
     safety_signal_presence,
     combined_reliability,
 )
-from evaluation.runner import detect_refusal
+from evaluation.refusal_detection_v2 import detect_refusal_v2
 from evaluation.citation_verifier import analyze_citations
 from evaluation.uncertainty_signals import extract_signals
 from evaluation.reliability_decision import make_reliability_decision
@@ -205,7 +205,7 @@ async def run_fusion_query(
     result["fused_context"] = fused
 
     # ---- 信号链路（全部复用，不修改）----
-    refusal = detect_refusal(llm_response, safety)
+    refusal = detect_refusal_v2(llm_response, safety_check_result=safety, question=question)
     result["refusal"] = refusal
 
     try:

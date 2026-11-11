@@ -3,7 +3,9 @@
 
 覆盖 docs/phase5c_design_audit.md 规划的用例 + 28 题真实数据回归：
     - R1-R9 全部规则（含 R7 的 REVISE / ALLOW 两个 variant）
-    - Q027（restricted + dosage）-> REFUSE
+    - 新结构化策略：安全剂量/诊断回答 -> REVISE；具体剂量/确定诊断 -> REFUSE
+    - 急症问题 -> EMERGENCY_ESCALATION（REVISE，固定急救提示）
+    - 旧 fixture 无结构化字段时保留 R2/R3/R4 兼容路径
     - Q028（SafetyChecker=safe + diagnosis intent）-> REFUSE（盲区兜底）
     - BLOCKED + 高 M12 -> 仍然 REFUSE（安全优先级不可被可靠性覆盖）
     - emergency / short_referral veto 正例；matched / mental_health / out_of_scope 不被 veto
@@ -63,6 +65,36 @@ def metric(score, level=None):
     if level is not None:
         d["level"] = level
     return d
+
+
+def make_answer_policy(
+    *,
+    policy_action="revise",
+    answer_safety="needs_disclaimer",
+    specific_dosage=False,
+    definitive_diagnosis=False,
+    substantive=True,
+    diagnosis_intent=False,
+    dosage_intent=True,
+    emergency=False,
+    revision_mode=None,
+):
+    return {
+        "is_refusal": policy_action == "refuse",
+        "policy_action": policy_action,
+        "answer_safety": answer_safety,
+        "has_specific_dosage": specific_dosage,
+        "has_definitive_diagnosis": definitive_diagnosis,
+        "has_substantive_content": substantive,
+        "question_profile": {
+            "diagnosis_intent": diagnosis_intent,
+            "dosage_intent": dosage_intent,
+            "emergency": emergency,
+        },
+        "matched_patterns": [],
+        "method": "synthetic structured policy",
+        "revision_mode": revision_mode,
+    }
 
 
 # 真实记录加载（B6 权威 fixture）
@@ -158,6 +190,67 @@ class TestRules(unittest.TestCase):
         )
         self.assertEqual(d.decision, "refuse")
         self.assertEqual(d.reason_code, "DOSAGE_REQUEST")
+
+    def test_legacy_safe_medication_label_cannot_bypass_r2_r4(self):
+        d = make_reliability_decision(
+            safety_check={"level": "restricted"},
+            uncertainty_analysis=make_uncertainty(
+                s11={"has_diagnosis_question": False, "has_dosage_question": True,
+                     "has_personal_symptom": False, "risk_count": 3}),
+            m8=metric(0.1, "low"), m9=metric(1.0), m10=metric(0.0), m12=metric(0.95),
+            citation_analysis={"citation_present": True, "citation_grounded": True},
+            refusal_result={"is_refusal": False, "method": "safe medication answer",
+                            "matched_patterns": ["safe_medication_answer"]},
+        )
+        self.assertEqual(d.decision, "refuse")
+        self.assertIn("R2", d.triggered_rules)
+        self.assertIn("R4", d.triggered_rules)
+        self.assertTrue(d.is_final_refusal)
+        self.assertFalse(d.evidence["safe_medication_exemption_applied"])
+
+    def test_safe_medication_answer_does_not_bypass_diagnosis(self):
+        d = make_reliability_decision(
+            safety_check={"level": "restricted"},
+            uncertainty_analysis=make_uncertainty(
+                s11={"has_diagnosis_question": True, "has_dosage_question": True,
+                     "has_personal_symptom": False, "risk_count": 3}),
+            m8=metric(0.1, "low"), m9=metric(1.0), m10=metric(0.0), m12=metric(0.95),
+            refusal_result={"is_refusal": False, "method": "safe medication answer",
+                            "matched_patterns": ["safe_medication_answer"]},
+        )
+        self.assertEqual(d.decision, "refuse")
+        self.assertIn("R3", d.triggered_rules)
+        self.assertTrue(d.is_final_refusal)
+
+    def test_structured_safe_answer_still_checks_low_reliability(self):
+        d = make_reliability_decision(
+            safety_check={"level": "restricted"},
+            uncertainty_analysis=make_uncertainty(
+                s11={"has_diagnosis_question": False, "has_dosage_question": True,
+                     "has_personal_symptom": False, "risk_count": 3},
+                s9_val=0.0,
+                s9_ev={"entity_yield": 0, "chunk_yield": 0, "likely_out_of_kb": False},
+            ),
+            m8=metric(0.5, "medium"), m9=metric(0.0), m10=metric(0.0), m12=metric(0.2),
+            refusal_result=make_answer_policy(),
+        )
+        self.assertEqual(d.decision, "refuse")
+        self.assertEqual(d.reason_code, "RELIABILITY_LOW")
+        self.assertIn("R6", d.triggered_rules)
+
+    def test_safe_medication_answer_does_not_bypass_blocked(self):
+        d = make_reliability_decision(
+            safety_check={"level": "blocked"},
+            uncertainty_analysis=make_uncertainty(
+                s11={"has_diagnosis_question": False, "has_dosage_question": True,
+                     "has_personal_symptom": False, "risk_count": 3}),
+            m8=metric(0.1, "low"), m9=metric(1.0), m10=metric(0.0), m12=metric(0.95),
+            refusal_result={"is_refusal": False, "method": "safe medication answer",
+                            "matched_patterns": ["safe_medication_answer"]},
+        )
+        self.assertEqual(d.decision, "refuse")
+        self.assertEqual(d.reason_code, "SAFETY_BLOCKED")
+        self.assertTrue(d.is_final_refusal)
 
     def test_r5_out_of_kb_refuse(self):
         # 合成：likely_out_of_kb=True + entity_yield==0
@@ -271,6 +364,115 @@ class TestRules(unittest.TestCase):
             m8=metric(0.65, "high"), m9=metric(0.0), m10=metric(0.8), m12=metric(0.205),
         )
         self.assertEqual(d.triggered_rules, ["R2", "R4", "R6"])
+
+
+class TestStructuredAnswerPolicy(unittest.TestCase):
+    """结构化回答安全字段驱动的新策略。"""
+
+    def _decide(self, refusal_result, *, safety="restricted", m12=0.95,
+                entity_yield=2, m2=None):
+        return make_reliability_decision(
+            safety_check={"level": safety},
+            uncertainty_analysis=make_uncertainty(
+                s11={"has_diagnosis_question": False, "has_dosage_question": True,
+                     "has_personal_symptom": False, "risk_count": 3},
+                s9_val=0.5 if entity_yield else 0.0,
+                s9_ev={
+                    "entity_yield": entity_yield,
+                    "chunk_yield": 1 if entity_yield else 0,
+                    "likely_out_of_kb": entity_yield == 0,
+                },
+                m2=m2,
+            ),
+            m8=metric(0.1, "low"),
+            m9=metric(1.0),
+            m10=metric(0.0),
+            m12=metric(m12),
+            citation_analysis={"citation_present": True, "citation_grounded": True},
+            refusal_result=refusal_result,
+        )
+
+    def test_safe_dosage_answer_is_revised(self):
+        d = self._decide(make_answer_policy())
+        self.assertEqual(d.decision, "revise")
+        self.assertEqual(d.reason_code, "SAFE_ANSWER_WITH_DISCLAIMER")
+        self.assertNotIn("R2", d.triggered_rules)
+        self.assertNotIn("R4", d.triggered_rules)
+        self.assertFalse(d.is_final_refusal)
+
+    def test_specific_dosage_is_replaced_not_refused(self):
+        d = self._decide(make_answer_policy(
+            policy_action="revise",
+            answer_safety="unsafe",
+            specific_dosage=True,
+            revision_mode="replace",
+        ))
+        self.assertEqual(d.decision, "revise")
+        self.assertEqual(d.reason_code, "UNSAFE_ANSWER_REPLACEMENT")
+        self.assertIn("R2R", d.triggered_rules)
+        self.assertFalse(d.is_final_refusal)
+
+    def test_safe_diagnosis_answer_is_revised(self):
+        d = self._decide(make_answer_policy(
+            diagnosis_intent=True,
+            dosage_intent=False,
+        ))
+        self.assertEqual(d.decision, "revise")
+        self.assertFalse(d.is_final_refusal)
+
+    def test_definitive_diagnosis_is_replaced_not_refused(self):
+        d = self._decide(make_answer_policy(
+            policy_action="revise",
+            answer_safety="unsafe",
+            definitive_diagnosis=True,
+            diagnosis_intent=True,
+            dosage_intent=False,
+            revision_mode="replace",
+        ))
+        self.assertEqual(d.decision, "revise")
+        self.assertEqual(d.reason_code, "UNSAFE_ANSWER_REPLACEMENT")
+        self.assertFalse(d.is_final_refusal)
+
+    def test_emergency_uses_fixed_revision_not_plain_refusal(self):
+        d = self._decide(make_answer_policy(
+            policy_action="emergency",
+            answer_safety="needs_emergency",
+            emergency=True,
+            dosage_intent=False,
+        ))
+        self.assertEqual(d.decision, "revise")
+        self.assertEqual(d.reason_code, "EMERGENCY_ESCALATION")
+        self.assertFalse(d.is_final_refusal)
+
+    def test_low_reliability_safe_answer_with_support_is_revised(self):
+        d = self._decide(
+            make_answer_policy(),
+            m12=0.2,
+            entity_yield=2,
+        )
+        self.assertEqual(d.decision, "revise")
+        self.assertEqual(d.reason_code, "RELIABILITY_LOW_REVISE")
+        self.assertIn("R6D", d.triggered_rules)
+        self.assertFalse(d.is_final_refusal)
+
+    def test_low_reliability_without_retrieval_support_refuses(self):
+        d = self._decide(
+            make_answer_policy(),
+            m12=0.2,
+            entity_yield=0,
+        )
+        self.assertEqual(d.decision, "refuse")
+        self.assertIn("R6", d.triggered_rules)
+        self.assertIn("R5", d.triggered_rules)
+
+    def test_blocked_still_wins(self):
+        d = self._decide(
+            make_answer_policy(),
+            safety="blocked",
+            m12=0.95,
+        )
+        self.assertEqual(d.decision, "refuse")
+        self.assertEqual(d.reason_code, "SAFETY_BLOCKED")
 
 
 class TestVeto(unittest.TestCase):
@@ -416,7 +618,9 @@ class TestRealRecords(unittest.TestCase):
     def setUpClass(cls):
         cls.records = _load_real_records()
 
-    def test_q027_real_record_refuse(self):
+    def test_q027_real_record_without_safe_answer_pattern_refuses(self):
+        # 旧 B6 fixture 的 refusal_detection 无 safe_medication_answer 信号；
+        # v41 真实回答的安全用药路径由 FAP 离线重放验证。
         d = _decide_real(_real_record("Q027"))
         self.assertEqual(d.decision, "refuse")
         self.assertEqual(d.reason_code, "SAFETY_RESTRICTED_PERSONAL")
@@ -465,7 +669,7 @@ class TestTwentyEightRegression(unittest.TestCase):
     结论（当前规则 + 真实数据）：
         - Q028 -> REFUSE（FN 修复）✅
         - Q004/Q011 -> veto 取消拒答（FP 修复）✅
-        - Q027 / 其余 TP 全部保留 ✅
+        - Q027 / 其余 TP 全部保留（旧 fixture 无 safe_medication_answer 信号）✅
         - Q016 -> REVISE（**已知缺口**：R5 依赖 likely_out_of_kb，但 LightRAG 广域检索
           使 out-of-KB 题 entity_yield>0 -> likely_out_of_kb=False -> R5 不触发）⚠️
         - Q021 -> 仍 FP（LLM 非确定性产生的 matched_patterns 拒答，veto 不覆盖）⚠️

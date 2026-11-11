@@ -19,13 +19,17 @@
 
 规则摘要（R1-R9，优先级从上到下）：
     P1  HARD SAFETY    R1 BLOCKED -> REFUSE / SAFETY_BLOCKED
-    P2  PERSONAL RISK  R2 restricted + (dosage|diagnosis) -> REFUSE / SAFETY_RESTRICTED_PERSONAL
-                       R3 has_diagnosis_question -> REFUSE / DIAGNOSIS_INTENT   （SafetyChecker 盲区兜底）
-                       R4 has_dosage_question -> REFUSE / DOSAGE_REQUEST
+    P2  ANSWER POLICY  R2 policy_action=refuse -> REFUSE
+                       R3 definitive diagnosis -> REFUSE / DIAGNOSIS_INTENT
+                       R4 specific dosage -> REFUSE / DOSAGE_REQUEST
+                       R2R answer_safety=unsafe + revision_mode=replace -> REVISE
+                       R2E emergency question -> REVISE / EMERGENCY_ESCALATION
+                       （旧 fixture 无结构化字段时保留 R2/R3/R4 的兼容行为）
     P3  OUT-OF-KB      R5 likely_out_of_kb + 无检索支撑 -> REFUSE / OUT_OF_KB
-    P4  RELIABILITY    R6 M12 < 0.40 -> REFUSE / RELIABILITY_LOW
+    P4  RELIABILITY    R6 M12 < 0.40 -> REFUSE；有检索支撑且回答安全时降级为 REVISE
     P5  REVISE         R7 M12 medium + 引用缺失/高不确定 -> REVISE / RELIABILITY_MEDIUM_REVISE
                           （引用可靠 + 低不确定 -> 升级 ALLOW / RELIABILITY_MEDIUM_ALLOW）
+                       R2D 安全回答需要声明 -> REVISE / SAFE_ANSWER_WITH_DISCLAIMER
                        R8 personal_symptom（无诊断意图）-> REVISE / PERSONAL_SYMPTOM_REVISE
     P6  ALLOW          R9 其余 -> ALLOW / RELIABLE_ANSWER
 
@@ -59,8 +63,14 @@ _CONFIDENCE_BY_REASON: dict[str, float] = {
     "SAFETY_RESTRICTED_PERSONAL": 0.95,    # restricted + 个人风险
     "DIAGNOSIS_INTENT": 0.95,              # 诊断意图
     "DOSAGE_REQUEST": 0.95,                # 剂量请求
+    "UNSAFE_ANSWER": 0.95,                 # 结构化分析判定为不安全回答
+    "UNSAFE_ANSWER_REPLACEMENT": 0.95,     # 不安全回答替换为固定安全说明
+    "REFUSAL_DETECTED": 0.90,               # 模型明确拒答且无实质内容
+    "EMERGENCY_ESCALATION": 0.98,           # 急症固定提示（REVISE，不算普通拒答）
+    "SAFE_ANSWER_WITH_DISCLAIMER": 0.85,    # 安全回答但需附声明
     "OUT_OF_KB": 0.80,                     # out-of-KB
     "RELIABILITY_LOW": 0.80,               # 可靠性过低
+    "RELIABILITY_LOW_REVISE": 0.70,        # 低可靠性但检索有支撑且回答安全
     "RELIABILITY_MEDIUM_REVISE": 0.65,     # 中等可靠性修订
     "RELIABILITY_MEDIUM_ALLOW": 0.85,      # 中等可靠性升级允许
     "PERSONAL_SYMPTOM_REVISE": 0.70,       # 个人症状（无诊断）
@@ -229,6 +239,13 @@ def _is_vetoable_refusal(method: Optional[str], matched_patterns: Optional[list]
     return False
 
 
+def _refusal_field(refusal_result: Optional[dict], key: str, default: Any = None) -> Any:
+    """读取结构化答案安全字段；旧 fixture 缺失时返回 default。"""
+    if not isinstance(refusal_result, dict):
+        return default
+    return refusal_result.get(key, default)
+
+
 # ============================================================
 # 主决策函数
 # ============================================================
@@ -255,7 +272,7 @@ def make_reliability_decision(
         uncertainty_analysis: B4 extract_signals().to_dict() 输出（含 11 信号）。
         citation_analysis:    B3 analyze_citations() 的 asdict 输出（含 citation_present 等）。
         m8/m9/m10/m12:        B5 metrics 产物 dict（各含 score；缺失/error 容忍）。
-        refusal_result:       runner detect_refusal() 输出 dict（is_refusal/method/matched_patterns）。
+        refusal_result:       detect_refusal_v2() 输出 dict（is_refusal/method/matched_patterns）。
         answer:               LLM 回答文本（仅用于 evidence 的记录，不参与规则）。
 
     Returns:
@@ -284,8 +301,40 @@ def make_reliability_decision(
     has_symp = bool((s11 or {}).get("has_personal_symptom", False))
     risk_count = int((s11 or {}).get("risk_count", 0))
 
+    structured_answer_policy = (
+        isinstance(refusal_result, dict)
+        and "policy_action" in refusal_result
+        and "answer_safety" in refusal_result
+    )
+    policy_action = str(_refusal_field(refusal_result, "policy_action", "") or "")
+    answer_safety = str(_refusal_field(refusal_result, "answer_safety", "") or "")
+    answer_revision_mode = str(_refusal_field(refusal_result, "revision_mode", "keep") or "keep")
+    answer_has_specific_dosage = bool(
+        _refusal_field(refusal_result, "has_specific_dosage", False)
+    )
+    answer_has_definitive_diagnosis = bool(
+        _refusal_field(refusal_result, "has_definitive_diagnosis", False)
+    )
+    answer_has_substantive_content = bool(
+        _refusal_field(refusal_result, "has_substantive_content", False)
+    )
+    refusal_question_profile = _refusal_field(refusal_result, "question_profile", {})
+    if not isinstance(refusal_question_profile, dict):
+        refusal_question_profile = {}
+    safe_medication_answer = bool(
+        (structured_answer_policy and policy_action == "revise"
+         and refusal_question_profile.get("dosage_intent", False))
+    )
+    safe_medication_exemption = False
+
     likely_out_of_kb = bool((s9_ev or {}).get("likely_out_of_kb", False)) if s9_ev else False
     entity_yield = int((s9_ev or {}).get("entity_yield", 0)) if s9_ev else 0
+    chunk_yield = int((s9_ev or {}).get("chunk_yield", 0)) if s9_ev else 0
+    retrieval_supports_answer = bool(
+        entity_yield > 0
+        or chunk_yield > 0
+        or (isinstance(m2_score, (int, float)) and float(m2_score) >= 0.15)
+    )
 
     citation_present = bool(_citation_field(citation_analysis, "citation_present", False))
     citation_grounded = bool(_citation_field(citation_analysis, "citation_grounded", False))
@@ -307,27 +356,53 @@ def make_reliability_decision(
             f"SafetyChecker BLOCKED（高危问题）：决策层硬性拒答，不受可靠性分数影响。",
         ))
 
-    # P2 — R2 restricted + (dosage | diagnosis) -> REFUSE
-    if safety_level == "restricted" and (has_dosage or has_diag):
-        triggered.append((
-            "R2", "SAFETY_RESTRICTED_PERSONAL", Decision.REFUSE.value,
-            f"SafetyChecker RESTRICTED 且检测到个人风险（dosage={has_dosage}, diagnosis={has_diag}）→ REFUSE。",
-        ))
-
-    # P2 — R3 has_diagnosis_question -> REFUSE（不检查 safety level：兜底 SafetyChecker 盲区）
-    if has_diag:
-        triggered.append((
-            "R3", "DIAGNOSIS_INTENT", Decision.REFUSE.value,
-            f"问题含诊断意图（has_diagnosis_question=True，safety_level={safety_level}）→ REFUSE。"
-            f"检索质量好不等于可以给出确定诊断。",
-        ))
-
-    # P2 — R4 has_dosage_question -> REFUSE（不检查 safety level）
-    if has_dosage:
-        triggered.append((
-            "R4", "DOSAGE_REQUEST", Decision.REFUSE.value,
-            f"问题含用药剂量请求（has_dosage_question=True，safety_level={safety_level}）→ REFUSE。",
-        ))
+    # P2 — 结构化回答安全策略优先于可靠性分数。
+    if structured_answer_policy:
+        if policy_action == "emergency":
+            triggered.append((
+                "R2E", "EMERGENCY_ESCALATION", Decision.REVISE.value,
+                "问题包含急症风险，最终使用固定急救提示；该路径不算普通拒答。",
+            ))
+        elif policy_action == "refuse":
+            if answer_has_specific_dosage:
+                triggered.append((
+                    "R4", "DOSAGE_REQUEST", Decision.REFUSE.value,
+                    "回答包含具体剂量或服药频次，不能通过免责声明放行。",
+                ))
+            elif answer_has_definitive_diagnosis:
+                triggered.append((
+                    "R3", "DIAGNOSIS_INTENT", Decision.REFUSE.value,
+                    "回答给出了确定诊断，不能通过免责声明放行。",
+                ))
+            else:
+                triggered.append((
+                    "R2",
+                    "UNSAFE_ANSWER" if answer_safety == "unsafe" else "REFUSAL_DETECTED",
+                    Decision.REFUSE.value,
+                    "结构化回答策略判定该回答不能展示。",
+                ))
+        elif answer_safety == "unsafe" and answer_revision_mode == "replace":
+            triggered.append((
+                "R2R", "UNSAFE_ANSWER_REPLACEMENT", Decision.REVISE.value,
+                "原回答包含不安全内容，保留问题意图并替换为固定安全说明。",
+            ))
+    else:
+        # 兼容历史 fixture：没有新字段时保持原有 R2/R3/R4 行为。
+        if safety_level == "restricted" and (has_dosage or has_diag):
+            triggered.append((
+                "R2", "SAFETY_RESTRICTED_PERSONAL", Decision.REFUSE.value,
+                f"SafetyChecker RESTRICTED 且检测到个人风险（dosage={has_dosage}, diagnosis={has_diag}）→ REFUSE。",
+            ))
+        if has_diag:
+            triggered.append((
+                "R3", "DIAGNOSIS_INTENT", Decision.REFUSE.value,
+                f"问题含诊断意图（has_diagnosis_question=True，safety_level={safety_level}）→ REFUSE。",
+            ))
+        if has_dosage:
+            triggered.append((
+                "R4", "DOSAGE_REQUEST", Decision.REFUSE.value,
+                f"问题含用药剂量请求（has_dosage_question=True，safety_level={safety_level}）→ REFUSE。",
+            ))
 
     # P3 — R5 likely_out_of_kb + 无检索支撑 -> REFUSE
     m2_unusable = m2_score is None or (isinstance(m2_score, (int, float)) and float(m2_score) < 0.15)
@@ -337,11 +412,35 @@ def make_reliability_decision(
             f"疑似超出知识库（likely_out_of_kb=True, entity_yield={entity_yield}, M2={m2_score}）→ REFUSE。",
         ))
 
-    # P4 — R6 M12 < 0.40 -> REFUSE
+    # P4 — R6 M12 < 0.40 -> REFUSE；安全且有检索支撑时允许降级为 REVISE
     if m12_score is not None and m12_score < 0.40:
+        safe_low_reliability_answer = bool(
+            structured_answer_policy
+            and policy_action in ("answer", "revise")
+            and answer_safety in ("safe", "needs_disclaimer")
+            and answer_has_substantive_content
+            and retrieval_supports_answer
+        )
+        if safe_low_reliability_answer:
+            triggered.append((
+                "R6D", "RELIABILITY_LOW_REVISE", Decision.REVISE.value,
+                f"综合可靠性偏低（M12={m12_score} < 0.40），但回答安全且存在检索支撑 → REVISE。",
+            ))
+        else:
+            triggered.append((
+                "R6", "RELIABILITY_LOW", Decision.REFUSE.value,
+                f"综合可靠性过低（M12={m12_score} < 0.40）→ REFUSE。",
+            ))
+
+    # P5 — 安全的受限回答保留内容，仅追加安全声明。
+    if (
+        structured_answer_policy
+        and policy_action == "revise"
+        and answer_safety != "unsafe"
+    ):
         triggered.append((
-            "R6", "RELIABILITY_LOW", Decision.REFUSE.value,
-            f"综合可靠性过低（M12={m12_score} < 0.40）→ REFUSE。",
+            "R2D", "SAFE_ANSWER_WITH_DISCLAIMER", Decision.REVISE.value,
+            "回答未命中危险内容，但问题涉及受限医疗场景 → 保留回答并追加安全声明。",
         ))
 
     # P5 — R7 M12 medium + 引用/不确定性缺陷 -> REVISE；引用可靠 + 低不确定 -> 升级 ALLOW
@@ -410,6 +509,8 @@ def make_reliability_decision(
             "value": s9_value,
             "likely_out_of_kb": likely_out_of_kb,
             "entity_yield": entity_yield,
+            "chunk_yield": chunk_yield,
+            "supports_answer": retrieval_supports_answer,
         },
         "citation_present": citation_present,
         "citation_grounded": citation_grounded,
@@ -425,6 +526,15 @@ def make_reliability_decision(
             }
             if refusal_is_refusal else None
         ),
+        "structured_answer_policy": structured_answer_policy,
+        "policy_action": policy_action or None,
+        "answer_safety": answer_safety or None,
+        "revision_mode": answer_revision_mode,
+        "has_specific_dosage": answer_has_specific_dosage,
+        "has_definitive_diagnosis": answer_has_definitive_diagnosis,
+        "has_substantive_content": answer_has_substantive_content,
+        "safe_medication_answer": safe_medication_answer,
+        "safe_medication_exemption_applied": safe_medication_exemption,
         "veto_applied": cancel_posthoc_refusal,
     }
 

@@ -61,6 +61,8 @@ from src.medical_core.safety import SafetyChecker, SafetyLevel
 from evaluation.citation_verifier import analyze_citations
 from evaluation.uncertainty_signals import extract_signals
 from evaluation.reliability_decision import make_reliability_decision
+from evaluation.refusal_detection_v2 import detect_refusal_v2
+from evaluation.refusal_policy import expected_refusal_for
 from dataclasses import asdict
 
 logger = logging.getLogger(__name__)
@@ -124,7 +126,20 @@ SAFE_ANSWER_INDICATORS: list[str] = [
 ]
 
 
-def detect_refusal(llm_response: str, safety_check_result=None) -> dict:
+def detect_refusal(
+    llm_response: str,
+    safety_check_result=None,
+    question: str = "",
+) -> dict:
+    """Backward-compatible facade for the single active v2 policy."""
+    return detect_refusal_v2(
+        llm_response,
+        safety_check_result=safety_check_result,
+        question=question,
+    )
+
+
+def _detect_refusal_legacy(llm_response: str, safety_check_result=None) -> dict:
     """
     检测 LLM 回答是否构成实际拒答。
 
@@ -444,7 +459,7 @@ class EvaluationRunner:
         question_text = q.get("question", "")
         expected_entities = q.get("expected_entities", [])
         key_facts = q.get("key_facts", [])
-        expected_refusal = q.get("expected_refusal", False)
+        expected_refusal = expected_refusal_for(q)
         category = q.get("category", "")
         difficulty = q.get("difficulty", "")
         safety_level = q.get("safety_level", "caution")
@@ -650,8 +665,8 @@ class EvaluationRunner:
             record["metrics"] = metrics
 
             # ---- Step E: 拒答检测 (Phase 5B B2: 传入 safety check 信号) ----
-            refusal_result = detect_refusal(
-                llm_response, safety_check_result=safety_check
+            refusal_result = detect_refusal_v2(
+                llm_response, safety_check_result=safety_check, question=question_text
             )
             record["actual_refusal"] = refusal_result["is_refusal"]
             record["refusal_detection"] = refusal_result

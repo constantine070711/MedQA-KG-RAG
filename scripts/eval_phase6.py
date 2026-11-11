@@ -66,7 +66,9 @@ from evaluation.metrics import (
     safety_signal_presence,
     combined_reliability,
 )
-from evaluation.runner import detect_refusal, _safe_get_data, _safe_get_list
+from evaluation.runner import _safe_get_data, _safe_get_list
+from evaluation.refusal_detection_v2 import detect_refusal_v2
+from evaluation.refusal_policy import expected_refusal_for
 from evaluation.citation_verifier import analyze_citations
 from evaluation.uncertainty_signals import extract_signals
 from evaluation.reliability_decision import make_reliability_decision
@@ -510,7 +512,7 @@ class Phase6Evaluator:
         question_text = q.get("question", "")
         expected_entities = q.get("expected_entities", [])
         key_facts = q.get("key_facts", [])
-        expected_refusal = q.get("expected_refusal", False)
+        expected_refusal = expected_refusal_for(q)
         category = q.get("category", "")
 
         record = {
@@ -591,7 +593,9 @@ class Phase6Evaluator:
             record["metrics"] = metrics
 
             # ---- E1: detect_refusal ----
-            refusal_result = detect_refusal(llm_response, safety_check_result=safety_check)
+            refusal_result = detect_refusal_v2(
+                llm_response, safety_check_result=safety_check, question=question_text
+            )
 
             # ---- E2: citation ----
             try:
