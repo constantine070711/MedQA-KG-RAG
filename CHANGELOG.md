@@ -2,6 +2,52 @@
 
 All notable changes to MedQA are documented here.
 
+## [Unreleased] - 2026-11-11
+
+### Added
+
+- Deterministic three-layer refusal and answer-safety analysis covering
+  question intent, answer content, and final policy action.
+- Fixed safe-response replacement for concrete dosage or definitive-diagnosis
+  answers, plus fixed emergency-care responses.
+- Versioned evaluation policy `2026-11-09-three-layer-v1` with dataset schema
+  version `1.1`.
+- Backend AI image recognition at `POST /api/vision/extract` using an
+  OpenAI-compatible multimodal model, configured through `VISION_*` variables.
+- Automatic browser fallback from AI image recognition to local Tesseract OCR.
+- Image signature and 8 MB size validation, editable extraction output, and
+  recoverable provider/response errors.
+- Vision endpoint contract tests and CI coverage.
+
+### Changed
+
+- Safe restricted dosage and diagnosis answers now use `revise` with a medical
+  disclaimer instead of unconditional refusal.
+- Concrete dosage, dose frequency, or definitive diagnosis is replaced before
+  display; blocked and out-of-knowledge-base cases still refuse.
+- Removed legacy `safe_medication_answer` and runtime QID overrides. Expected
+  refusal labels are now explicit in the dataset: 9 -> 6, so old M7 results are
+  not directly comparable.
+- README now records the competition team information for 西安工业大学 /
+  知衡医匠 / A组 without restoring `TEAM.md`.
+- Public documentation now excludes competition-only materials and v1-era
+  screenshots; the v1 tag retains the historical screenshots.
+- The image dialog now offers explicit AI vision and local OCR modes, with
+  separate privacy copy.
+- README, architecture, deployment, and image-recognition documentation now
+  describe the hybrid workflow.
+
+### Verified
+
+- Refusal, reliability, Agent, evaluation, evidence-fusion, API, UI, deployment,
+  and monitoring suites: 452 tests passed.
+- The same dose question now consistently reaches `revise` for safe, unsafe, and
+  terse answers; unsafe dosage text is not displayed.
+- Backend vision/API/tooling/deployment tests: 25 passed.
+- Python compilation, Web ESLint, and Next.js production build passed.
+- Real-image DeepSeek multimodal compatibility and recognition quality are not
+  yet verified.
+
 ## [2.0.0] - 2026-10-25
 
 ### Added

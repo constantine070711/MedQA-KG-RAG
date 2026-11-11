@@ -96,6 +96,43 @@ merges, CI runs, and release tags.
   Chinese/English image OCR.
 - Added GitHub Actions for API contract tests and frontend lint/build.
 
+## 2026-11-03: Backend AI Vision with Local OCR Fallback
+
+- Added `POST /api/vision/extract` for validated image upload and
+  OpenAI-compatible multimodal extraction.
+- Added explicit AI vision and local OCR modes in the image dialog, with
+  automatic fallback when the vision request fails.
+- Added `VISION_*` configuration while reusing DeepSeek credentials by default.
+- Added vision endpoint contract tests and included them in v2 CI.
+- Updated README, architecture, OCR, and deployment documentation.
+- Real-image provider compatibility and recognition quality remain to be tested
+  by the user with representative medical images.
+
+## 2026-11-04: Competition Submission Metadata
+
+- Added the public team information section to the README: 西安工业大学,
+  知衡医匠, A组.
+- Kept team-member assignments out of the README placeholder flow and aligned
+  them with the official competition registration materials.
+- Did not restore the removed `TEAM.md` file.
+- Removed competition-only documents and v1-era screenshots from the current v2
+  documentation tree; the v1 tag retains the historical screenshots.
+- Kept internal development records local and made `docs/README.md` point only
+  to public technical, runtime, and evaluation documentation.
+
+## 2026-11-11: Three-Layer Answer-Safety Policy
+
+- Replaced the former keyword-only refusal behavior with a deterministic
+  three-layer policy: question intent, answer-content safety, and final action.
+- Safe restricted answers can now be returned with a disclaimer; concrete
+  dosage or definitive-diagnosis content is replaced with a fixed safety
+  response, and emergency questions use a fixed urgent-care response.
+- Removed the legacy `safe_medication_answer` bypass and runtime QID overrides.
+- Versioned the evaluation dataset policy as
+  `2026-11-09-three-layer-v1`; the six expected refusals are now explicit in the
+  dataset.
+- Verified 452 tests, local API/Web health, and Neo4j graph access.
+
 ## Public Evidence
 
 - Git tag: `v1.0.0`

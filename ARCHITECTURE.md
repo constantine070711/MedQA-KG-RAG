@@ -2,7 +2,7 @@
 
 > 版本: v2（Next.js + FastAPI SSE + MCP + 语音/OCR）+ 已冻结的 v1 检索/证据/安全核心；
 > CBLUE 数据适配、Reranker 重排、日志监控保持独立实验/旁路边界。
-> 日期: 2026-10-19
+> 日期: 2026-11-11
 > 底座: LightRAG 1.5.4
 
 ---
@@ -18,7 +18,8 @@ Next.js 16 + TypeScript evidence workspace
   ├── workflow state and tool trace
   ├── evidence inspector and graph view
   ├── Web Speech API voice input / playback
-  └── Tesseract.js local image OCR
+  ├── DeepSeek multimodal image recognition
+  └── Tesseract.js local OCR fallback
                   │
                   │ SSE + HTTP JSON
                   ▼
@@ -26,6 +27,7 @@ FastAPI v2 gateway
   ├── POST /api/chat/stream
   ├── GET  /api/tools
   ├── POST /api/tools/execute
+  ├── POST /api/vision/extract
   └── GET  /api/health, /api/meta
                   │
                   ▼
@@ -51,7 +53,8 @@ MedQAAgent LangGraph StateGraph
 | Browser | `web/src/components/medqa-workspace.tsx` | Conversation, streaming, input controls, evidence drawer |
 | Browser | `web/src/components/evidence-panel.tsx` | Safety, reliability, tool trace, sources, citations, triples |
 | Browser | `web/src/hooks/use-speech.ts` | Mandarin speech recognition and answer playback |
-| Browser | `web/src/components/image-ocr-dialog.tsx` | Local OCR, editable text, supported-entity lookup |
+| Browser | `web/src/components/image-ocr-dialog.tsx` | AI vision / local OCR modes, editable text, supported-entity lookup |
+| API | `api/main.py` / `src/vision_client.py` | Validated image upload and OpenAI-compatible multimodal extraction |
 | API | `api/runtime.py` | LangGraph node updates to SSE events and answer chunks |
 | API | `api/toolbox.py` | Controlled HTTP tool execution |
 | MCP | `mcp_server/medqa_mcp.py` | Five read-only tools over stdio |
@@ -82,8 +85,12 @@ The server also emits SSE heartbeat comments while long generation is running.
 ### 0.4 Multimodal Boundary
 
 - Voice recognition and speech synthesis run in the browser.
-- OCR runs locally with Tesseract.js `chi_sim+eng`.
-- Source images are not sent to the FastAPI service.
+- AI vision sends the selected image only to the backend `/api/vision/extract`
+  endpoint and the configured multimodal provider; the backend does not persist
+  the original image.
+- Local OCR remains available with Tesseract.js `chi_sim+eng` and never uploads
+  the source image.
+- AI failure automatically falls back to local OCR.
 - OCR text is editable and does not automatically become medical evidence.
 - Supported disease/drug entities can generate general knowledge questions,
   but no tool diagnoses an individual from an image.
@@ -327,7 +334,7 @@ LightRAG.aquery("2型糖尿病有哪些常见症状?", mode=mix)
                └── 正常 → [neo4j_retrieve] F5 mentions + _retrieve_neo4j（只读, 不可达降级）
                           → [build_prompt] F5 build_fusion_prompt（安全 prompt + 证据段）
                           → [generate] RAGEngine.query_with_context（唯一一次 LLM generation, 缓存开关）
-                          → [analyze] detect_refusal / citation / B4 信号 / M8-M12（零 LLM）
+                          → [analyze] 三层拒答/回答安全 / citation / B4 信号 / M8-M12（零 LLM）
                           → [decide] 5C ReliabilityDecision（终端门, 复用不重写）
                           → [finalize] F5 fuse_evidence + 展示层输出信封
 ```
@@ -684,3 +691,4 @@ Phase 1-3 (当前)               Phase 4-5                    Phase 7-8
 | 2026-08-25 | v2.4 — Reranker 实验评估（src/retrieval/rerank.py，实验阶段未接入生产）+ 日志监控模块（request_id + JSONL + metrics 白名单 + 脱敏） |
 | 2026-08-26 | v2.5 — 日志轮转（src/monitoring.py `_rotate_if_needed`，5MB/3 备份，失败静默）+ UI 多轮 + Memory 日志补验 |
 | 2026-10-19 | v2.6 — Next.js 16 证据工作台 + FastAPI SSE + MCP 工具/轨迹 + 语音 + 本地 OCR + CI |
+| 2026-11-11 | v2.7 — AI 识图 + 三层拒答与回答安全策略；v1 截图仅保留在 v1 tag |

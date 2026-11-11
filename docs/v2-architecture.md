@@ -15,6 +15,7 @@ Next.js evidence workspace (web/)
 FastAPI v2 gateway (api/)
         |
         +-- Controlled tool gateway (/api/tools)
+        +-- Multimodal image extraction (/api/vision/extract)
         |
         v
 MedQAAgent LangGraph workflow (src/agent.py)
@@ -28,11 +29,12 @@ MedQAAgent LangGraph workflow (src/agent.py)
 External MCP clients use the same MedicalToolbox through
 `mcp_server/medqa_mcp.py`.
 
-Voice input, answer playback, and image OCR run in the browser. Voice uses the
-Web Speech API, including browser-provided Chinese voice discovery, persisted
-voice selection, and quality-aware automatic ranking. OCR uses Tesseract.js with
-`chi_sim+eng`. Images are not sent to the API unless the user explicitly places
-recognized text into a chat request.
+Voice input and answer playback run in the browser through the Web Speech API.
+Image recognition supports two explicit modes: backend AI vision through
+`/api/vision/extract`, or local Tesseract.js OCR with `chi_sim+eng`. AI mode
+uploads the selected image for recognition and does not persist it on the
+backend; local mode keeps the image inside the browser. If AI recognition fails,
+the browser automatically retries with local OCR.
 ```
 
 ## API
@@ -45,6 +47,12 @@ LLM, so the web shell can render before the first medical query.
 ### `GET /api/meta`
 
 Returns example questions and the medical disclaimer.
+
+### `POST /api/vision/extract`
+
+Accepts one JPG, PNG, or WebP image up to 8 MB and returns editable text from
+the configured OpenAI-compatible multimodal model. The browser falls back to
+local OCR when this endpoint is unavailable or the model rejects image input.
 
 ### `POST /api/chat/stream`
 
@@ -114,6 +122,12 @@ available through the v1 tag while ensuring v2 safe queries use an explicit
 medical safety prompt. The prompt prohibits unsolicited dosage values,
 administration frequency, and personalized medication plans, even when those
 details appear in retrieved context.
+
+After generation, a deterministic three-layer check separates question intent,
+answer-content safety, and the final policy action. Safe restricted answers can
+be returned with a disclaimer; concrete dosage or definitive-diagnosis content
+is replaced with a fixed safe response; emergency questions use a fixed
+urgent-care response; blocked and out-of-knowledge-base cases remain refusals.
 
 ## Local Development
 

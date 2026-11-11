@@ -66,6 +66,8 @@
 
 `v1.0.0` 标签保留 v1 的不可变归档；`main` 与 `v2` 当前保持同步，打开仓库默认查看 v2 内容。也可以通过 GitHub 页面左上角的分支选择器切换代码版本。
 
+`v2` 文档目录只展示当前 Next.js 工作台；v1 的 Streamlit 界面和图谱截图随 `v1.0.0` tag 归档，不混入 v2 的当前截图。
+
 ### 项目文档
 
 - [公开文档索引](docs/README.md)
@@ -90,7 +92,7 @@
 - **Phase 8**：Streamlit Web UI + 知识图谱可视化；
 - **Phase 9**：多轮对话 Memory；
 - **Phase 10**：结构化医学知识库扩展实验（独立 Experiment KB，与生产环境隔离）、Reranker 实验评估、日志与监控旁路。
-- **v2 应用版本**：Next.js 证据工作台、FastAPI SSE、MCP 工具、语音输入/朗读、本地图片 OCR 和 GitHub Actions。
+- **v2 应用版本**：Next.js 证据工作台、FastAPI SSE、MCP 工具、语音输入/朗读、AI 识图与本地 OCR 回退和 GitHub Actions。
 
 ---
 
@@ -110,7 +112,7 @@
 | 🧪 **评测体系** | 完整评测框架：28 题固定评测集 + `tests/` 495 项 + `evaluation/` 97 项；Neo4j 未启动时 24 项集成测试跳过 |
 | 🧰 **MCP / 工具调用** | LightRAG、Neo4j 实体/关系/路径查询封装为受控工具；stdio MCP Server + HTTP 工具网关 + 前端调用轨迹 |
 | 🔊 **语音多模态** | 浏览器中文语音输入 + 回答朗读；可选择系统中文声音、自动推荐自然语音并记住选择 |
-| 🖼️ **图片文字识别** | 药盒/说明书/化验单图片在浏览器本地 OCR；识别文字可编辑，命中实体后可发起通用知识问题 |
+| 🖼️ **图片文字识别** | 药盒/说明书/化验单支持后端 AI 识图；失败时自动回退本地 OCR；识别文字可编辑，命中实体后可发起通用知识问题 |
 
 ---
 
@@ -129,7 +131,7 @@
 | API | **FastAPI + Server-Sent Events** |
 | Agent Tools | **MCP stdio server + HTTP tool gateway** |
 | Multimodal | **Web Speech API**（语音输入 / 可切换朗读声音） |
-| Image OCR | **Tesseract.js**（`chi_sim+eng`，浏览器本地运行） |
+| Image OCR | **DeepSeek 多模态识图**（后端）+ **Tesseract.js**（`chi_sim+eng`，本地回退） |
 | 评测 | `evaluation/` 自研指标 + `unittest` 回归测试 |
 | 部署 | Docker Compose（Neo4j + FastAPI + Next.js） |
 
@@ -254,10 +256,10 @@ flowchart LR
 
 除此之外：
 
-- **诊断意图拒答**：识别「我是不是得了…」「帮我诊断」等个人诊疗问题 → 拒答并建议就医；
-- **剂量请求拒答**：「吃几片」「用量」等 → 拒绝提供具体剂量；
+- **诊断意图安全修订**：识别「我是不是得了…」「帮我诊断」等个人诊疗问题；不给出确定诊断，只提供通用解释、危险信号和就医建议；
+- **剂量请求安全修订**：「吃几片」「用量」等 → 不提供具体剂量/频次；若回答中出现具体数值，自动替换为固定安全说明；
 - **不确定性拒答**：知识库覆盖不足或可靠性不足时明确拒答，**不编造**；
-- **紧急情况识别**：胸痛、呼吸困难等 → 提示立即拨打 120；
+- **紧急情况识别**：严重胸痛、当前呼吸困难等 → 固定提示立即拨打 120；
 - **每轮 LLM 生成次数受控**：BLOCKED 为 0 次，常规为 1 次。
 
 > ⚠️ 设计定位是**面向医疗问答场景的安全控制机制**，属于工程约束与风险缓解手段，**不能等同于临床安全保证**。
@@ -414,6 +416,12 @@ DEEPSEEK_API_KEY=your_deepseek_api_key_here
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-flash
 
+# AI 图片识别（默认复用 DeepSeek；VISION_MODEL 需支持图片输入）
+VISION_ENABLED=true
+VISION_API_KEY=
+VISION_BASE_URL=
+VISION_MODEL=
+
 # Neo4j（可选）
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
@@ -560,7 +568,7 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 8. **数据合规**：数据来源与许可证全程记录（`data/SOURCES.md`），大型真实数据集不入库。
 9. **工具可核验**：LangGraph 的检索步骤通过 SSE 工具轨迹展示，外部 Agent 可通过 MCP 调用同一只读工具；
 10. **现代 Web 体验**：Next.js 流式回答、三栏证据工作台和移动端抽屉，而不是单纯聊天框；
-11. **多模态隐私边界**：语音由浏览器处理，图片 OCR 在本地执行，原图不上传；
+11. **多模态隐私边界**：语音由浏览器处理；图片可选择后端 AI 识图，也可使用不上传图片的本地 OCR；
 12. **可持续版本线**：v1 用 tag 冻结，v2 通过短分支、merge commit 和 CI 逐步演进。
 
 ---
@@ -573,7 +581,7 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 - **实验知识库不接入生产**：大规模扩展 KB 未带来固定评测集增益，保持隔离；
 - **LLM 输出非确定性**：同类问题的生成结果可能存在细微差异；
 - **Neo4j 为可选组件**：未配置时无结构化图谱证据。
-- **浏览器多模态能力依赖浏览器实现**：语音识别和朗读声音列表由浏览器/系统提供，Chrome、Edge 的可用声音可能不同；首次图片 OCR 需要下载中文模型；
+- **多模态能力存在环境依赖**：语音识别和朗读声音列表由浏览器/系统提供；AI 识图依赖服务端视觉模型和网络；首次本地 OCR 需要下载中文模型；
 - **图片 OCR 仅用于文字识别和实体定位**：不自动解释个人检查结果，不构成图片诊断；
 - **在线演示尚未部署**：当前提供本地启动方式和截图，公网地址待部署阶段补充。
 

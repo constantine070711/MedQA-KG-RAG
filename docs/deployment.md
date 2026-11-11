@@ -29,7 +29,13 @@ Edit `.env`:
 DEEPSEEK_API_KEY=...
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=...
+VISION_ENABLED=true
+VISION_MODEL=...
 ```
+
+`VISION_MODEL` must support OpenAI-compatible image input. If it is not
+configured or the request fails, the browser automatically falls back to local
+Tesseract OCR.
 
 The Compose stack uses these host ports by default:
 
