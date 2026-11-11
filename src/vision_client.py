@@ -12,11 +12,13 @@ import logging
 import time
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Optional
-
-from openai import AsyncOpenAI
+from typing import TYPE_CHECKING, Any, Optional
 
 from src.config import Config, get_config
+
+
+if TYPE_CHECKING:
+    from openai import AsyncOpenAI
 
 
 logger = logging.getLogger(__name__)
@@ -67,7 +69,7 @@ class VisionClient:
     def __init__(
         self,
         config: Optional[Config] = None,
-        client: Optional[AsyncOpenAI] = None,
+        client: Optional["AsyncOpenAI"] = None,
     ) -> None:
         self.config = config or get_config()
         self._client = client
@@ -83,8 +85,14 @@ class VisionClient:
             and "your_" not in api_key
         )
 
-    def _get_client(self) -> AsyncOpenAI:
+    def _get_client(self) -> "AsyncOpenAI":
         if self._client is None:
+            try:
+                from openai import AsyncOpenAI
+            except ImportError as exc:
+                raise VisionNotConfiguredError(
+                    "OpenAI SDK is not installed"
+                ) from exc
             self._client = AsyncOpenAI(
                 api_key=self.config.vision_api_key,
                 base_url=self.config.vision_base_url,
@@ -121,9 +129,10 @@ class VisionClient:
             }
         ]
 
+        client = self._get_client()
         started = time.perf_counter()
         try:
-            response = await self._get_client().chat.completions.create(
+            response = await client.chat.completions.create(
                 model=self.config.vision_model,
                 messages=messages,
                 temperature=0,

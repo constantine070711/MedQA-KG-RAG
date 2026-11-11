@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+import asyncio
+import sys
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
 from api.main import app, detect_image_mime, get_vision_client
 from src.vision_client import (
     VisionExtraction,
+    VisionClient,
+    VisionNotConfiguredError,
     VisionProviderError,
 )
 
@@ -52,6 +58,23 @@ class TestImageSignature(unittest.TestCase):
 
     def test_rejects_unknown_image(self):
         self.assertIsNone(detect_image_mime(b"not-an-image"))
+
+    def test_missing_openai_sdk_is_recoverable(self):
+        config = SimpleNamespace(
+            vision_enabled=True,
+            vision_api_key="test-key",
+            vision_base_url="https://example.invalid",
+            vision_model="vision-test-model",
+            vision_timeout_seconds=5,
+        )
+        client = VisionClient(config=config)
+
+        async def run() -> None:
+            await client.extract_text(PNG_BYTES, "image/png")
+
+        with patch.dict(sys.modules, {"openai": None}):
+            with self.assertRaises(VisionNotConfiguredError):
+                asyncio.run(run())
 
 
 class TestVisionEndpoint(unittest.TestCase):
