@@ -123,7 +123,7 @@ merges, CI runs, and release tags.
 
 ## Public Evidence
 
-- Git tag: `v1.0.0`
+- Git tags: `v1.0.0`, `v2.0.0`
 - Active v2 branch: `v2`
 - CI workflow: `.github/workflows/v2-ci.yml`
 - Architecture: [ARCHITECTURE.md](../ARCHITECTURE.md)

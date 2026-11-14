@@ -64,7 +64,7 @@
 | **v2（当前版本）** | [v2](https://github.com/constantine070711/MedQA-KG-RAG/tree/v2) | Next.js + TypeScript + FastAPI SSE | 证据工作台、工具轨迹、语音和图片 OCR |
 | **v1（历史版本）** | [v1](https://github.com/constantine070711/MedQA-KG-RAG/tree/v1) | Python + Streamlit | 原始知识图谱与 RAG 问答界面 |
 
-`v1.0.0` 标签保留 v1 的不可变归档；`v2` 为当前开发分支，`main` 为稳定分支。最新部署、限流与安全改动以 `v2` 为准，也可以通过 GitHub 页面左上角的分支选择器切换代码版本。
+`v1.0.0` 标签保留 v1 的不可变归档，`v2.0.0` 为当前发布标签；`v2` 为当前开发分支，`main` 为稳定分支。最新部署、限流与安全改动以 `v2` 为准，也可以通过 GitHub 页面左上角的分支选择器切换代码版本。
 
 `v2` 文档目录只展示当前 Next.js 工作台；v1 的 Streamlit 界面和图谱截图随 `v1.0.0` tag 归档，不混入 v2 的当前截图。
 
@@ -109,7 +109,7 @@
 | 💬 **多轮对话** | 有限窗口 Memory（最近 3 轮 / 600 字符），仅作生成背景，不污染证据 |
 | 📊 **可观测性** | request_id + JSONL 结构化日志 + 敏感信息脱敏 + 日志轮转 |
 | 🖥️ **Web UI** | v2：Next.js 证据工作台 + SSE 流式回答；v1：Streamlit + pyvis |
-| 🧪 **评测体系** | 完整评测框架：28 题固定评测集 + `tests/` 495 项 + `evaluation/` 97 项；Neo4j 未启动时 24 项集成测试跳过 |
+| 🧪 **评测体系** | 完整评测框架：28 题固定评测集 + `tests/` 511 项 + `evaluation/` 129 项；Neo4j 未启动时 24 项集成测试跳过 |
 | 🧰 **MCP / 工具调用** | LightRAG、Neo4j 实体/关系/路径查询封装为受控工具；stdio MCP Server + HTTP 工具网关 + 前端调用轨迹 |
 | 🔊 **语音多模态** | 浏览器中文语音输入 + 回答朗读；可选择系统中文声音、自动推荐自然语音并记住选择 |
 | 🖼️ **图片文字识别** | 药盒/说明书/化验单支持后端 AI 识图；失败时自动回退本地 OCR；识别文字可编辑，命中实体后可发起通用知识问题 |
@@ -556,7 +556,7 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 ### 18.3 回归测试
 
 - 测试框架使用 stdlib `unittest`，通过 `python -m unittest` 运行（项目约定不引入额外测试框架）；
-- v2 当前验证：`tests/` **495 项（471 passed / 24 skipped）**，另保留 `evaluation/` 97 项；
+- v2 当前验证：`tests/` **511 项（487 passed / 24 skipped）**，另保留 `evaluation/` 129 项；
 - v1.0.0 历史基线为 571 项（`tests/` 474 + `evaluation/` 97）；
 - 其中 **24 项 Neo4j 集成测试** 在 Neo4j 未启动时自动 `skip`（启动 Neo4j 后全部实际执行，此前完整回归为 0 skipped）。
 
