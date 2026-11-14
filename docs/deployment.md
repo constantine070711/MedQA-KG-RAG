@@ -118,6 +118,14 @@ data licensing before running it against a large corpus.
 
 ## Public Deployment
 
+The production overlay adds a Caddy reverse proxy with automatic HTTPS and
+publishes only ports 80/443:
+
+```bash
+export COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
+docker compose up -d --build
+```
+
 `NEXT_PUBLIC_MEDQA_API_URL` is compiled into the frontend at image-build time.
 Set it to a browser-reachable API URL before building:
 
@@ -125,6 +133,10 @@ Set it to a browser-reachable API URL before building:
 $env:NEXT_PUBLIC_MEDQA_API_URL="https://api.example.com"
 docker compose build web
 ```
+
+The production overlay instead leaves this value empty, so the browser calls
+`/api/*` on the same origin and Caddy routes it to the API service. Only use an
+absolute URL when the Web and API are served from different domains.
 
 Also set `APP_ORIGINS` to the public frontend origin:
 

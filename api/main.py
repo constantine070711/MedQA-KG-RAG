@@ -9,6 +9,7 @@ from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
+from api.ratelimit import RateLimitMiddleware
 from api.runtime import AgentRuntime
 from api.schemas import ChatRequest, ToolCallRequest, VisionExtractResponse
 from api.toolbox import get_toolbox
@@ -39,6 +40,10 @@ app = FastAPI(
     description="Evidence-grounded medical knowledge assistant API.",
 )
 
+# Load .env before reading runtime flags so local runs honor APP_ORIGINS and
+# RATE_LIMIT_* values. Containers receive the same values through env_file.
+get_config()
+
 _origins = [
     origin.strip()
     for origin in os.getenv(
@@ -47,6 +52,16 @@ _origins = [
     ).split(",")
     if origin.strip()
 ]
+if os.getenv("RATE_LIMIT_ENABLED", "1").strip().lower() not in {
+    "0",
+    "false",
+    "no",
+    "off",
+}:
+    # Added before CORS so CORS stays the outermost middleware and also
+    # decorates 429 responses. The limiter is a pure ASGI middleware, which
+    # keeps SSE responses unbuffered.
+    app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,

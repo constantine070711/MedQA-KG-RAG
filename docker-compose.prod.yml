@@ -1,0 +1,73 @@
+# Production overlay for docker-compose.yml.
+#
+# Only Caddy publishes host ports (80/443). API, Web and Neo4j stay on the
+# private Compose network. Usage:
+#
+#   export COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
+#   docker compose up -d --build
+#
+# Required values in .env: MEDQA_DOMAIN and PUBLIC_ORIGIN.
+
+services:
+  neo4j:
+    ports: !reset []
+    environment:
+      NEO4J_server_memory_heap_initial__size: ${NEO4J_HEAP:-1G}
+      NEO4J_server_memory_heap_max__size: ${NEO4J_HEAP:-1G}
+      NEO4J_server_memory_pagecache_size: ${NEO4J_PAGECACHE:-512M}
+    logging: &default-logging
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  api:
+    ports: !reset []
+    environment:
+      NEO4J_URI: bolt://neo4j:7687
+      APP_ORIGINS: ${PUBLIC_ORIGIN:?set PUBLIC_ORIGIN in .env}
+      TRUST_PROXY_HEADERS: "1"
+      RATE_LIMIT_ENABLED: "1"
+      RATE_LIMIT_CHAT_PER_MINUTE: ${RATE_LIMIT_CHAT_PER_MINUTE:-20}
+      RATE_LIMIT_VISION_PER_MINUTE: ${RATE_LIMIT_VISION_PER_MINUTE:-10}
+      RATE_LIMIT_TOOL_PER_MINUTE: ${RATE_LIMIT_TOOL_PER_MINUTE:-40}
+      RATE_LIMIT_GENERAL_PER_MINUTE: ${RATE_LIMIT_GENERAL_PER_MINUTE:-120}
+      TOKENIZERS_PARALLELISM: "false"
+    logging: *default-logging
+
+  web:
+    ports: !reset []
+    build:
+      args:
+        # Empty string means same-origin requests through Caddy: /api/* is
+        # proxied to the API service, so no CORS and no second certificate.
+        NEXT_PUBLIC_MEDQA_API_URL: ""
+    logging: *default-logging
+
+  neo4j-init:
+    logging: *default-logging
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: medqa-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      MEDQA_DOMAIN: ${MEDQA_DOMAIN:?set MEDQA_DOMAIN in .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    logging: *default-logging
+
+volumes:
+  caddy_data:
+  caddy_config:

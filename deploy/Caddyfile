@@ -1,0 +1,31 @@
+{
+	admin off
+}
+
+{$MEDQA_DOMAIN} {
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), geolocation=(), microphone=(self)"
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	@api path /api/*
+	handle @api {
+		reverse_proxy api:8000 {
+			# Keep Server-Sent Events flowing instead of buffering the answer.
+			flush_interval -1
+			transport http {
+				read_timeout 310s
+				write_timeout 310s
+			}
+		}
+	}
+
+	handle {
+		encode zstd gzip
+		reverse_proxy web:3000
+	}
+}

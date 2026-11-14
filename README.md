@@ -195,7 +195,7 @@ flowchart TD
 1. **跨来源合并**：LightRAG 实体与 Neo4j 节点按 canonical 名称合并，保留全部 provenance；
 2. **优先级排序**：`Neo4j 三元组 > Neo4j 节点 > LightRAG 关系 > LightRAG 实体 > 向量块`；
 3. **有界截断**：先排序后截断，防止超长 prompt；
-4. **诚实覆盖**：无证据时如实记录 coverage notes，绝不伪造实体或关系。
+4. **诚实覆盖**：无证据时如实记录 coverage notes，不生成无依据的实体或关系。
 
 最终，**仅结构化的 Neo4j 证据段 + 安全指令被注入 system_prompt**，向量块等由 LightRAG 检索进上下文，LLM 在「证据受限」的约束下生成回答。
 
@@ -473,6 +473,16 @@ docker compose up -d --build api web
 数据盘排障见
 [docs/windows-docker-troubleshooting.md](docs/windows-docker-troubleshooting.md)。
 
+### 公网部署（域名 + HTTPS）
+
+生产环境使用 `docker-compose.prod.yml`：只暴露 Caddy 的 `80/443`，API、
+Web、Neo4j 留在内部网络，HTTPS 证书自动申请，并对问答/识图接口按 IP 限流。
+
+```bash
+export COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
+docker compose up -d --build
+```
+
 ### 本地开发
 
 ```bash
@@ -562,7 +572,7 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 2. **医疗安全分级机制**：SAFE / CAUTION / RESTRICTED / BLOCKED 四级 + 诊断/剂量/不确定性拒答，BLOCKED 路径零 LLM 生成；
 3. **确定性可靠性决策**：M8-M12 指标 + ReliabilityDecision，信号链零 LLM、零额外 API 成本；
 4. **证据可追溯**：每个证据条目携带 provenance，引用计算 grounded ratio；
-5. **诚实降级**：Neo4j 不可用时如实展示并降级，不伪造图谱证据；
+5. **诚实降级**：Neo4j 不可用时如实展示并降级，不补造图谱证据；
 6. **可观测性**：request_id + 结构化 JSONL 日志 + 敏感信息脱敏 + 轮转，且对主流程零侵入；
 7. **工程规范**：纯函数可测性设计、白名单校验的 Cypher、参数化查询、有界遍历、完整单元测试；
 8. **数据合规**：数据来源与许可证全程记录（`data/SOURCES.md`），大型真实数据集不入库。
@@ -583,7 +593,6 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 - **Neo4j 为可选组件**：未配置时无结构化图谱证据。
 - **多模态能力存在环境依赖**：语音识别和朗读声音列表由浏览器/系统提供；AI 识图依赖服务端视觉模型和网络；首次本地 OCR 需要下载中文模型；
 - **图片 OCR 仅用于文字识别和实体定位**：不自动解释个人检查结果，不构成图片诊断；
-- **在线演示尚未部署**：当前提供本地启动方式和截图，公网地址待部署阶段补充。
 
 ---
 
@@ -594,7 +603,7 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 - **更丰富的安全检测**：从关键词规则向语义 / 模型化检测演进；
 - **Memory 增强**：更长窗口、向量记忆、会话摘要；
 - **Benchmark 扩展**：接入更多公开医疗 QA 基准（如 CBLUE 相关任务）；
-- **部署化**：Next.js、FastAPI、Neo4j 的一键 Docker Compose、HTTPS 和公网健康检查；
+- **持续部署**：在现有 Docker Compose + Caddy HTTPS 基础上补充 CI/CD 与集中式配额；
 - **端到端测试**：补充 Playwright 流程覆盖、移动端截图和无障碍检查；
 - **多用户与安全审计**：身份认证、配额、审计日志和敏感数据保留策略。
 
