@@ -1619,7 +1619,7 @@ class TestMemoryUsedHint(unittest.TestCase):
 
 
 # ============================================================
-# Phase 9 P4: UI 打磨静态内容（答辩准备）
+# UI 静态内容检查
 # ============================================================
 
 class TestPhase9P4UiPolish(unittest.TestCase):

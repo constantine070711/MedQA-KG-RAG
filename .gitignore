@@ -82,19 +82,13 @@ chroma_db/
 *.db
 *.sqlite
 
-# ---------- 内部开发文档（不进入公开仓库）----------
-# 开发进度/交接/决策记录与各 Phase 设计报告，仅保留本地
-CLAUDE.md
-PROJECT_HANDOFF.md
-PROJECT_LOG.md
-PROJECT_STATUS.md
-DECISIONS.md
-docs/phase*
-项目流程与要求.txt
-
 # ---------- 日志 ----------
 logs/
 *.log
+
+# ---------- 部署备份 ----------
+backups/
+*.tgz
 
 # ---------- IDE / OS ----------
 .vscode/

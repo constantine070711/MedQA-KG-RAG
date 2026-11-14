@@ -28,10 +28,6 @@ All notable changes to MedQA are documented here.
 - Removed legacy `safe_medication_answer` and runtime QID overrides. Expected
   refusal labels are now explicit in the dataset: 9 -> 6, so old M7 results are
   not directly comparable.
-- README now records the competition team information for 西安工业大学 /
-  知衡医匠 / A组 without restoring `TEAM.md`.
-- Public documentation now excludes competition-only materials and v1-era
-  screenshots; the v1 tag retains the historical screenshots.
 - The image dialog now offers explicit AI vision and local OCR modes, with
   separate privacy copy.
 - README, architecture, deployment, and image-recognition documentation now

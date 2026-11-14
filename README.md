@@ -64,7 +64,7 @@
 | **v2（当前版本）** | [v2](https://github.com/constantine070711/MedQA-KG-RAG/tree/v2) | Next.js + TypeScript + FastAPI SSE | 证据工作台、工具轨迹、语音和图片 OCR |
 | **v1（历史版本）** | [v1](https://github.com/constantine070711/MedQA-KG-RAG/tree/v1) | Python + Streamlit | 原始知识图谱与 RAG 问答界面 |
 
-`v1.0.0` 标签保留 v1 的不可变归档；`main` 与 `v2` 当前保持同步，打开仓库默认查看 v2 内容。也可以通过 GitHub 页面左上角的分支选择器切换代码版本。
+`v1.0.0` 标签保留 v1 的不可变归档；`v2` 为当前开发分支，`main` 为稳定分支。最新部署、限流与安全改动以 `v2` 为准，也可以通过 GitHub 页面左上角的分支选择器切换代码版本。
 
 `v2` 文档目录只展示当前 Next.js 工作台；v1 的 Streamlit 界面和图谱截图随 `v1.0.0` tag 归档，不混入 v2 的当前截图。
 
@@ -483,6 +483,9 @@ export COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
 docker compose up -d --build
 ```
 
+服务器选型、模型与索引上传、Neo4j 初始化、域名备案和排障的完整步骤见
+[docs/deploy-public.md](docs/deploy-public.md)。
+
 ### 本地开发
 
 ```bash
@@ -633,7 +636,6 @@ python scripts/run_query.py --question "糖尿病有哪些症状?" --safe
 |---|---|
 | 团队名称 | 知衡医匠 |
 | 学校 | 西安工业大学 |
-| 参赛组别 | A组 |
 
 ---
 

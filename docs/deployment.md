@@ -126,6 +126,10 @@ export COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
 docker compose up -d --build
 ```
 
+See the Chinese step-by-step runbook in
+[deploy-public.md](deploy-public.md) for server sizing, DNS, index import,
+rate limits, and troubleshooting.
+
 `NEXT_PUBLIC_MEDQA_API_URL` is compiled into the frontend at image-build time.
 Set it to a browser-reachable API URL before building:
 

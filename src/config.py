@@ -26,12 +26,12 @@ from dotenv import load_dotenv
 # ============================================================
 
 def _get_project_root() -> Path:
-    """自动检测项目根目录（查找 .env 或 CLAUDE.md）"""
+    """自动检测项目根目录（查找 .env 或 README.md）"""
     # 优先使用当前文件向上推算
     current = Path(__file__).resolve().parent.parent
 
     # 验证：检查是否存在标志文件
-    markers = [".env", "CLAUDE.md", "requirements.txt"]
+    markers = [".env", "README.md", "requirements.txt"]
     for marker in markers:
         if (current / marker).exists():
             return current

@@ -108,18 +108,6 @@ merges, CI runs, and release tags.
 - Real-image provider compatibility and recognition quality remain to be tested
   by the user with representative medical images.
 
-## 2026-11-04: Competition Submission Metadata
-
-- Added the public team information section to the README: 西安工业大学,
-  知衡医匠, A组.
-- Kept team-member assignments out of the README placeholder flow and aligned
-  them with the official competition registration materials.
-- Did not restore the removed `TEAM.md` file.
-- Removed competition-only documents and v1-era screenshots from the current v2
-  documentation tree; the v1 tag retains the historical screenshots.
-- Kept internal development records local and made `docs/README.md` point only
-  to public technical, runtime, and evaluation documentation.
-
 ## 2026-11-11: Three-Layer Answer-Safety Policy
 
 - Replaced the former keyword-only refusal behavior with a deterministic

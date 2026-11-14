@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Phase 7 G1 — MedQAAgent 单元测试（stdlib unittest，mock 引擎/检索器，零真实 LLM / 零真实 DB）。
 
-覆盖（对齐 G1 需求清单 16 项 + 设计审计 §10）:
+覆盖（对齐需求清单 16 项 + 验收清单 §10）:
     1.  State 初始化
     2.  SAFE workflow
     3.  CAUTION workflow
