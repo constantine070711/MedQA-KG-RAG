@@ -2,7 +2,8 @@
 	admin off
 }
 
-{$MEDQA_DOMAIN} {
+# Serve the apex domain and www with one certificate covering both names.
+{$MEDQA_DOMAIN}, www.{$MEDQA_DOMAIN} {
 	header {
 		X-Content-Type-Options nosniff
 		X-Frame-Options DENY
