@@ -12,14 +12,16 @@ services:
       - "${NEO4J_BOLT_PORT:-7687}:7687"   # Bolt
     environment:
       NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
-      NEO4J_USER: ${NEO4J_USER}
-      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+      # The image treats every NEO4J_* variable as a config key, so keep the
+      # healthcheck credentials under a non-reserved prefix.
+      MEDQA_NEO4J_USER: ${NEO4J_USER}
+      MEDQA_NEO4J_PASSWORD: ${NEO4J_PASSWORD}
     volumes:
       - medqa-neo4j-data:/data
     healthcheck:
       test:
         - CMD-SHELL
-        - cypher-shell -u "$$NEO4J_USER" -p "$$NEO4J_PASSWORD" "RETURN 1" >/dev/null 2>&1
+        - cypher-shell -u "$$MEDQA_NEO4J_USER" -p "$$MEDQA_NEO4J_PASSWORD" "RETURN 1" >/dev/null 2>&1
       interval: 15s
       timeout: 10s
       start_period: 40s
